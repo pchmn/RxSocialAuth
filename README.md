@@ -37,3 +37,61 @@ In short :
 * You don't have to add the facebook SDK in your project, it is already included in this library
 
 If you have trouble when trying to authenticate users, maybe you have to add the users you're trying to authenticate in your test users. See http://stackoverflow.com/questions/41861564/server-error-code-1675030-message-error-performing-query
+
+
+
+### Google Sign-In
+Create a `RxGoogleAuth` object using the `RxGoogleAuth.Builder` builder.
+```java
+// build RxGoogleAuth object
+RxGoogleAuth rxGoogleAuth = new RxGoogleAuth.Builder(this)
+        .requestIdToken(getString(R.string.oauth_google_key))
+        .requestEmail()
+        .requestProfile()
+        .disableAutoSignIn()
+        .enableSmartLock(true)
+        .build();
+```
+Then you can use these `signIn()`, `silentSignIn(Credential credential)`, `signOut()` and `revokeAccess()` methods of the `RxGoogleAuth` object.
+```java
+// sign in
+rxGoogleAuth.signIn()
+        .subscribe(rxAccount -> {
+            // user is signed in
+            Log.d(TAG, "name: " + rxAccount.getDisplayName());
+
+        }, throwable -> {
+            Log.e(TAG, throwable.getMessage());
+       });
+       
+// silent sign in
+// you have to pass a credential object in order to silent sign in
+rxGoogleAuth.silentSignIn(Credential credential)
+        .subscribe(rxAccount -> {
+            // user is signed in
+            Log.d(TAG, "name: " + rxAccount.getDisplayName());
+
+        }, throwable -> {
+            Log.e(TAG, throwable.getMessage());
+       });
+       
+// sign out
+rxGoogleAuth.signOut()
+        .subscribe(rxStatus -> {
+            if(rxStatus.isSuccess())
+                // user is signed out
+
+        }, throwable -> {
+            Log.e(TAG, throwable.getMessage());
+       });
+       
+// revoke access
+rxGoogleAuth.revokeAccess()
+        .subscribe(rxStatus -> {
+            if(rxStatus.isSuccess())
+                // access is revoked
+
+        }, throwable -> {
+            Log.e(TAG, throwable.getMessage());
+       }); 
+```
