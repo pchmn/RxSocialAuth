@@ -1,0 +1,22 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.pchmn.rxsocialauth">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <application>
+
+        <activity android:name="com.pchmn.rxsocialauth.auth.RxGoogleAuth$GoogleAuthHiddenActivity"
+            android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"
+            android:theme="@style/AppTheme.Transparent"/>
+
+        <activity android:name="com.pchmn.rxsocialauth.auth.RxFacebookAuth$FacebookAuthHiddenActivity"
+            android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"
+            android:theme="@style/AppTheme.Transparent"/>
+
+        <activity android:name="com.pchmn.rxsocialauth.smartlock.RxSmartLockPassword$SmartLockHiddenActivity"
+            android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"
+            android:theme="@style/AppTheme.Transparent"/>
+
+    </application>
+
+</manifest>

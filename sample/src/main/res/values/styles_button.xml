@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- button base -->
+    <style name="AppTheme.Button">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:paddingLeft">12dp</item>
+        <item name="android:paddingRight">12dp</item>
+        <item name="android:typeface">normal</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:foreground">?attr/selectableItemBackground</item>
+    </style>
+
+    <!-- button base accent -->
+    <style name="AppTheme.Button.Accent">
+        <item name="android:background">@drawable/bg_button_accent</item>
+        <item name="android:textColor">#ffffff</item>
+    </style>
+
+    <!-- button account chooser -->
+    <style name="AppTheme.Button.AccountChooser">
+        <item name="android:textAllCaps">false</item>
+        <item name="android:drawablePadding">20dp</item>
+        <item name="android:layout_marginBottom">24dp</item>
+        <item name="android:layout_gravity">center_horizontal</item>
+        <item name="android:gravity">left|center_vertical</item>
+    </style>
+
+    <!-- button account chooser google -->
+    <style name="AppTheme.Button.AccountChooser.GoogleButton">
+        <item name="android:drawableLeft">@drawable/ic_google_logo</item>
+        <item name="android:background">@drawable/bg_button_google</item>
+        <item name="android:textColor">#757575</item>
+    </style>
+
+    <!-- button account chooser facebook -->
+    <style name="AppTheme.Button.AccountChooser.FacebookButton">
+        <item name="android:drawableLeft">@drawable/ic_facebook_logo_square</item>
+        <item name="android:background">@drawable/bg_button_facebook</item>
+        <item name="android:textColor">#fffffe</item>
+    </style>
+
+</resources>

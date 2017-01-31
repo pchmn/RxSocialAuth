@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">RxSocialAuth</string>
+    <string name="status_success_log_out_message">Successfully logged out</string>
+    <string name="status_error_log_out_message">Error while logging out</string>
+    <string name="status_error_sign_in_message">Error while signing in</string>
+    <string name="status_success_credential_saved_message">Successfully saved credential</string>
+    <string name="status_canceled_credential_saved_message">User canceled credential saving</string>
+    <string name="status_canceled_request_credential">Request credential canceled</string>
+    <string name="status_canceled_email_facebook">User canceled email permission</string>
+
+    <string name="preference_smartlock_helper">com.pchmn.rxsocialauth.SmartLockHelper</string>
+    <string name="preference_current_user">com.pchmn.rxsocialauth.CurrentUser</string>
+</resources>
