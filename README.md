@@ -59,10 +59,10 @@ rxGoogleAuth.signIn()
         .subscribe(rxAccount -> {
             // user is signed in
             Log.d(TAG, "name: " + rxAccount.getDisplayName());
-
-        }, throwable -> {
+        }, 
+        throwable -> {
             Log.e(TAG, throwable.getMessage());
-       });
+        });
        
 // silent sign in
 // you have to pass a credential object in order to silent sign in
@@ -70,28 +70,28 @@ rxGoogleAuth.silentSignIn(Credential credential)
         .subscribe(rxAccount -> {
             // user is signed in
             Log.d(TAG, "name: " + rxAccount.getDisplayName());
-
-        }, throwable -> {
+        }, 
+        throwable -> {
             Log.e(TAG, throwable.getMessage());
-       });
+        });
        
 // sign out
 rxGoogleAuth.signOut()
         .subscribe(rxStatus -> {
             if(rxStatus.isSuccess())
                 // user is signed out
-
-        }, throwable -> {
+        }, 
+        throwable -> {
             Log.e(TAG, throwable.getMessage());
-       });
+        });
        
 // revoke access
 rxGoogleAuth.revokeAccess()
         .subscribe(rxStatus -> {
             if(rxStatus.isSuccess())
                 // access is revoked
-
-        }, throwable -> {
+        }, 
+        throwable -> {
             Log.e(TAG, throwable.getMessage());
-       }); 
+        }); 
 ```
