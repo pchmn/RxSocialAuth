@@ -288,8 +288,8 @@ To retrieve user's stored credentials and automatically sign in the user with fo
 With this method you don't have to handle different cases. No matter if there is no stored credential, if there is only one stored credential, or if there are multiple stored credentials, the `requestCredentialAndAutoSignIn()` method will do all the work.
 
 * If there is only one stored credential, or if the user picks one of the multiple stored credentials, this method will catch it :
-..* If the account type is Google or Facebook, the user will be sign in according to the provider, and the observer will receive a `RxAccount` object in case of success. If it fails a `Throwable` will be emitted.
-..* If the account type is null, this is a login password credential. In this case, the observer will receive a `Credential` object, containing the id and the password, and you'll have to authenticate the user manually with the credential. 
+    * If the account type is `Google` or `Facebook`, the user will be sign in according to the provider, and the observer will receive a `RxAccount` object in case of success. If it fails a `Throwable` will be emitted.
+    * If the account type is null, this is a `LoginPassword` credential. In this case, the observer will receive a `Credential` object, containing the id and the password, and you'll have to authenticate the user manually with the credential. 
 
 * If the user cancels or if there is no stored credential, a `Throwable` will be emitted.
 
