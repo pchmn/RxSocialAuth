@@ -90,6 +90,7 @@ rxGoogleAuth.signIn()
             // user is signed in
             // use the rxAccount object as you want
             Log.d(TAG, "name: " + rxAccount.getDisplayName());
+            Log.d(TAG, "email: " + rxAccount.getEmail());
         }, 
         throwable -> {
             Log.e(TAG, throwable.getMessage());
@@ -103,6 +104,7 @@ rxGoogleAuth.silentSignIn(Credential credential)
             // user is signed in
             // use the rxAccount object as you want
             Log.d(TAG, "name: " + rxAccount.getDisplayName());
+            Log.d(TAG, "email: " + rxAccount.getEmail());
         }, 
         throwable -> {
             Log.e(TAG, throwable.getMessage());
@@ -115,8 +117,9 @@ With `signOut()` and `revokeAccess()` methods, the observer receive a `RxStatus`
 // sign out
 rxGoogleAuth.signOut()
         .subscribe(rxStatus -> {
-            if(rxStatus.isSuccess())
+            if(rxStatus.isSuccess()) {
                 // user is signed out
+            }
         }, 
         throwable -> {
             Log.e(TAG, throwable.getMessage());
@@ -126,8 +129,9 @@ rxGoogleAuth.signOut()
 // revoke access
 rxGoogleAuth.revokeAccess()
         .subscribe(rxStatus -> {
-            if(rxStatus.isSuccess())
+            if(rxStatus.isSuccess()) {
                 // access is revoked
+            }
         }, 
         throwable -> {
             Log.e(TAG, throwable.getMessage());
@@ -162,6 +166,7 @@ rxFacebookAuth.signIn()
             // user is signed in
             // use the rxAccount object as you want
             Log.d(TAG, "name: " + rxAccount.getDisplayName());
+            Log.d(TAG, "email: " + rxAccount.getEmail());
         }, 
         throwable -> {
             Log.e(TAG, throwable.getMessage());
@@ -174,8 +179,9 @@ With `signOut()` method, the observer receive a `RxStatus` object in case of suc
 // sign out
 rxFacebookAuth.signOut()
         .subscribe(rxStatus -> {
-            if(rxStatus.isSuccess())
+            if(rxStatus.isSuccess()) {
                 // user is signed out
+            }
         }, 
         throwable -> {
             Log.e(TAG, throwable.getMessage());
