@@ -103,6 +103,7 @@ You can configure the builder with these methods :
 * `disableAutoSignIn()` : Clear the account previously selected by the user, so the user will have to pick an account
 * `enableSmartLock(boolean enable)` : Enable or disable Smart Lock For Passwords. If enabled, it will save automatically the credential in Smart Lock For Passwords
 
+
 #### Sign in and silent sign in
 With `signIn()` and `silentSignIn(Credential credential)` methods, the observer receive a `RxAccount` object in case of success.
 ```java
@@ -260,24 +261,57 @@ You can configure the builder with these methods :
 #### Retrieve a user's stored credentials
 Automatically sign users into your app by using the Credentials API to request and retrieve stored credentials for your users.
 
-To retrieve user's stored credentials, use the `requestCredential()` method on a `RxSmartLockPassword` object. If you want to retrieve a Facebook account credential, for example, you have to call `.setAccountTypes(IdentityProviders.FACEBOOK)` on the builder of your `RxSmartLockPassword` object before.
+If you want to retrieve a Facebook account credential, for example, you have to call `.setAccountTypes(IdentityProviders.FACEBOOK)` on the builder of your `RxSmartLockPassword` object before.
 
-You don't have to handle different cases. No matter if there is only one stored credential, or if there are multiple stored credentials, the `requestCredential()` method will do all the work.
-
-If there is only one stored credential, or if the user pick one of the multiple stored credentials, the user will be signed in according to the provider, and the observer will receive a `RxAccount` object in case of success. If the user cancel, a `Throwable` will be emitted.
+To retrieve user's stored credentials, use the `requestCredential()` method on a `RxSmartLockPassword` object. This method will emit a `Observable<CredentialRequestResult>`. 
 
 ```java
 // request credential
 rxSmartLockPassword.requestCredential()
-        .subscribe(rxAccount -> {
-            // user is signed in
-            // use the rxAccount object as you want
-            Log.d(TAG, "name: " + rxAccount.getDisplayName());
-            Log.d(TAG, "email: " + rxAccount.getEmail());
+        .subscribe(credentialRequestResult -> {
+            if (credentialRequestResult.getStatus().isSuccess()) {
+                onCredentialRetrieved(credentialRequestResult.getCredential());
+            } 
+            else {
+                resolveResult(credentialRequestResult.getStatus());
+            }
             
         }, throwable -> {
             Log.e(TAG, throwable.getMessage());
         });
+```
+
+To retrieve user's stored credentials and automatically sign in the user with found credentials, use the `requestCredentialAndAutoSignIn()` method. It will emit a `Observable<Object>`.
+
+With this method you don't have to handle different cases. No matter if there is only one stored credential, or if there are multiple stored credentials, the `requestCredentialAndAutoSignIn()` method will do all the work.
+
+If there is only one stored credential, or if the user picks one of the multiple stored credentials, this method will catch it. Then if the account type is Google or Facebook, the user will be sign in according to the provider, and the observer will receive a `RxAccount` object in case of success. If the account type is null, this is a login password credential. In this case, the observer will receive a `Credential` object, containing the id and the password, and you'll have to authenticate the user manually with the credential. 
+If the sig in fails or if the user cancels, a `Throwable` will be emitted.
+
+```java
+// request credential and auto sign in
+rxSmartLockPassword.requestCredentialAndAutoSignIn()
+        .subscribe(o -> {
+            if(o instanceof RxAccount) {
+                // user is signed in using google or facebook
+                RxAccount rxAccount = (RxAccount) o;
+                Log.d(TAG, "provider: " + rxAccount.getProvider());
+                Log.d(TAG, "email: " + rxAccount.getEmail());
+             }
+             else if(o instanceof Credential) {
+                // credential contains login and password
+                Credential credential = (Credential) o;
+                signInWithLoginPassword(credential.getId(), credential.getPassword());
+             }
+
+        }, throwable -> {
+            Log.e(TAG, throwable.getMessage());
+        });
+        
+        
+private void signInWithLoginPassword(String login, String password) {
+    // authenticate the user like you want
+}
 ```
 
 #### Store a user's credentials
