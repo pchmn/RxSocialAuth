@@ -38,3 +38,6 @@ dependencies {
     // gson
     compile 'com.google.code.gson:gson:2.8.0'
 }
+
+apply plugin: 'com.github.dcendents.android-maven'
+group='com.github.pchmn'
