@@ -193,7 +193,6 @@ Create a `RxSmartLockPassword` object using the `RxSmartLockPassword.Builder` bu
 ```java
 // build RxSmartLockPassword object
 // 'this' represents a Context
-// request smart lock credential on launch
 RxSmartLockPassword rxSmartLockPassword = new RxSmartLockPassword.Builder(this)
         .disableAutoSignIn()
         .setAccountTypes(IdentityProviders.GOOGLE, IdentityProviders.FACEBOOK)
@@ -207,11 +206,11 @@ You can configure the builder with these methods :
 #### Retrieve a user's stored credentials
 Automatically sign users into your app by using the Credentials API to request and retrieve stored credentials for your users.
 
-Use the `requestCredential()` method on a `RxSmartLockPassword` object. If you want to retrieve a Facebook account credential, for example, you have to call `.setAccountTypes(IdentityProviders.FACEBOOK)` on the builder of your `RxSmartLockPassword` object before.
+To retrieve user's stored credentials, use the `requestCredential()` method on a `RxSmartLockPassword` object. If you want to retrieve a Facebook account credential, for example, you have to call `.setAccountTypes(IdentityProviders.FACEBOOK)` on the builder of your `RxSmartLockPassword` object before.
 
 You don't have to handle different cases. No matter if there is only one stored credential, or if there are multiple stored credentials, the `requestCredential()` method will do all the work.
 
-If there is only one stored credential, or if the user pick one of the multiple stored credentials, the user will be signed in according to the provider, and the observer will receive a `RxAccount` object in case of success. If the user cancel a `Throwable` will be emitted.
+If there is only one stored credential, or if the user pick one of the multiple stored credentials, the user will be signed in according to the provider, and the observer will receive a `RxAccount` object in case of success. If the user cancel, a `Throwable` will be emitted.
 
 ```java
 // request credential
@@ -227,3 +226,37 @@ rxSmartLockPassword.requestCredential()
         });
 ```
 
+#### Store a user's credentials
+After users successfully sign in, create accounts, or change passwords, allow them to store their credentials to automate future authentication in your app.
+
+To store a user's credentials, use the `saveCredential(Credential credential)` method on a `RxSmartLockPassword` object. In case of success the observer will receive a `RxStatus` object.
+
+```java
+// save credential
+rxSmartLockPassword.saveCredential(Credential credential)
+        .subscribe(rxStatus -> {
+            if(rxStatus.isSuccess()) {
+                // credential saved
+            }
+            
+        }, throwable -> {
+            Log.e(TAG, throwable.getMessage());
+        });
+```
+
+#### Delete stored credentials
+
+To delete a stored credential, use the `deleteCredential(Credential credential)` method on a `RxSmartLockPassword` object. In case of success the observer will receive a `RxStatus` object.
+
+```java
+// delete credential
+rxSmartLockPassword.deleteCredential(Credential credential)
+        .subscribe(rxStatus -> {
+            if(rxStatus.isSuccess()) {
+                // credential deleted
+            }
+            
+        }, throwable -> {
+            Log.e(TAG, throwable.getMessage());
+        });
+```
