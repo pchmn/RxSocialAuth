@@ -108,7 +108,7 @@ You can configure the builder with these methods :
 #### Sign in and silent sign in
 With `signIn()` and `silentSignIn(Credential credential)` methods, the observer receive a `RxAccount` object in case of success.
 
-I think I found a bug with the Google Sign-In API with the [`silentSignIn()`](https://developers.google.com/android/reference/com/google/android/gms/auth/api/signin/GoogleSignInApi.html#silentSignIn(com.google.android.gms.common.api.GoogleApiClient)) method. If the user you try to silent sign in doesn't have a Google+ account, no matter if you set the [`requestProfile()`](https://developers.google.com/android/reference/com/google/android/gms/auth/api/signin/GoogleSignInOptions.Builder.html#requestProfile()) options, you won't have his profile.
+I think I found a bug in the Google Sign-In API with the [`silentSignIn()`](https://developers.google.com/android/reference/com/google/android/gms/auth/api/signin/GoogleSignInApi.html#silentSignIn(com.google.android.gms.common.api.GoogleApiClient)) method. If the user you try to silent sign in doesn't have a Google+ account, no matter if you set the [`requestProfile()`](https://developers.google.com/android/reference/com/google/android/gms/auth/api/signin/GoogleSignInOptions.Builder.html#requestProfile()) options, you won't have his profile.
 ```java
 // sign in
 rxGoogleAuth.signIn()
