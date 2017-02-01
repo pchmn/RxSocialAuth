@@ -294,11 +294,13 @@ rxSmartLockPassword.deleteCredential(Credential credential)
             Log.e(TAG, throwable.getMessage());
         });
 ```
+## Sample
+You can see the sample app with some examples on this [link](https://github.com/jaychang0917/SocialLoginManager)
 
 ## Credits
 This library was greatly inspired by [SocialLoginManager](https://github.com/jaychang0917/SocialLoginManager)
 
-##License
+## License
 ```
 Copyright 2017 pchmn
 
