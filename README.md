@@ -1,7 +1,7 @@
 # RxSocialAuth
 Android RxJava library for Social auth (Google, Facebook) and Smart Lock For Passwords
 
-[![Release](https://jitpack.io/v/pchmn/RxSocialAuth.svg)](https://jitpack.io/#pchmn/RxSocialAuth/1.0.1-beta)
+[![Release](https://jitpack.io/v/pchmn/RxSocialAuth.svg)](https://jitpack.io/#pchmn/RxSocialAuth)
 
 ## Setup
 To use this library your `minSdkVersion` must be >= 15.
