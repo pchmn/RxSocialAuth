@@ -91,8 +91,8 @@ rxGoogleAuth.signIn()
             // use the rxAccount object as you want
             Log.d(TAG, "name: " + rxAccount.getDisplayName());
             Log.d(TAG, "email: " + rxAccount.getEmail());
-        }, 
-        throwable -> {
+            
+        }, throwable -> {
             Log.e(TAG, throwable.getMessage());
         });
 
@@ -105,8 +105,8 @@ rxGoogleAuth.silentSignIn(Credential credential)
             // use the rxAccount object as you want
             Log.d(TAG, "name: " + rxAccount.getDisplayName());
             Log.d(TAG, "email: " + rxAccount.getEmail());
-        }, 
-        throwable -> {
+            
+        }, throwable -> {
             Log.e(TAG, throwable.getMessage());
         });
 ```
@@ -120,8 +120,8 @@ rxGoogleAuth.signOut()
             if(rxStatus.isSuccess()) {
                 // user is signed out
             }
-        }, 
-        throwable -> {
+            
+        }, throwable -> {
             Log.e(TAG, throwable.getMessage());
         });
        
@@ -132,8 +132,8 @@ rxGoogleAuth.revokeAccess()
             if(rxStatus.isSuccess()) {
                 // access is revoked
             }
-        }, 
-        throwable -> {
+            
+        }, throwable -> {
             Log.e(TAG, throwable.getMessage());
         }); 
 ```
@@ -167,8 +167,8 @@ rxFacebookAuth.signIn()
             // use the rxAccount object as you want
             Log.d(TAG, "name: " + rxAccount.getDisplayName());
             Log.d(TAG, "email: " + rxAccount.getEmail());
-        }, 
-        throwable -> {
+            
+        }, throwable -> {
             Log.e(TAG, throwable.getMessage());
         });
 ```
@@ -182,8 +182,8 @@ rxFacebookAuth.signOut()
             if(rxStatus.isSuccess()) {
                 // user is signed out
             }
-        }, 
-        throwable -> {
+            
+        }, throwable -> {
             Log.e(TAG, throwable.getMessage());
         });
 ```
