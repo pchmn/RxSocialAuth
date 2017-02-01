@@ -4,8 +4,8 @@ package com.pchmn.rxsocialauth.auth;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.util.Log;
 
-import com.google.android.gms.common.api.CommonStatusCodes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.TypeAdapter;
@@ -18,7 +18,6 @@ import java.io.IOException;
 
 import rx.Observable;
 import rx.functions.Action1;
-import rx.functions.Func3;
 import rx.subjects.PublishSubject;
 
 public class RxSocialAuth {
@@ -34,6 +33,8 @@ public class RxSocialAuth {
     private static final String CURRENT_USER_KEY = "current_user";
     // observer
     private PublishSubject<RxStatus> mStatusObserver;
+    // auth state listener
+    private RxAuthStateListener mRxAuthStateListener;
 
     /**
      * Construct a RxSocialAuth object from a given Context
@@ -100,6 +101,9 @@ public class RxSocialAuth {
                 .create();
         String accountString = gson.toJson(account);
         mEditor.putString(CURRENT_USER_KEY, accountString).commit();
+        // listener
+        if(mRxAuthStateListener != null)
+            mRxAuthStateListener.onAuthStateChanged(account);
     }
 
     /**
@@ -120,6 +124,9 @@ public class RxSocialAuth {
      */
     public void deleteCurrentUser() {
         mEditor.clear().commit();
+        // listener
+        if(mRxAuthStateListener != null)
+            mRxAuthStateListener.onAuthStateChanged(null);
     }
 
     /**
@@ -128,12 +135,37 @@ public class RxSocialAuth {
     public final class UriAdapter extends TypeAdapter<Uri> {
         @Override
         public void write(JsonWriter out, Uri uri) throws IOException {
-            out.value(uri.toString());
+            if(uri != null)
+                out.value(uri.toString());
+            else
+                out.value("");
         }
 
         @Override
         public Uri read(JsonReader in) throws IOException {
             return Uri.parse(in.nextString());
         }
+    }
+
+    /**
+     * Add an auth listener
+     *
+     * @param listener the listener to add
+     */
+    /*public void addRxAuthStateListener(RxAuthStateListener listener) {
+        mRxAuthStateListener = listener;
+        // first time
+        mRxAuthStateListener.onAuthStateChanged(getCurrentUser());
+    }*/
+
+    /**
+     * Remove the current auth state listener
+     */
+    /*public void removeRxAuthStateListener() {
+        mRxAuthStateListener = null;
+    }*/
+
+    public interface RxAuthStateListener {
+        void onAuthStateChanged(RxAccount newAccount);
     }
 }

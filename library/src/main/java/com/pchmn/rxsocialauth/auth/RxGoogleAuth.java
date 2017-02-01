@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.credentials.Credential;
@@ -329,6 +330,7 @@ public class RxGoogleAuth implements IRxSocialAuth {
         public void handleSignInResult(GoogleSignInResult result) {
             if (result.isSuccess()) {
                 GoogleSignInAccount account = result.getSignInAccount();
+                Log.e(TAG, "scopes: " + account.getGrantedScopes());
                 verifySmartLockIsEnabled(new RxAccount(account));
             }
             else {
@@ -361,19 +363,24 @@ public class RxGoogleAuth implements IRxSocialAuth {
                         .subscribe(new Action1<RxStatus>() {
                             @Override
                             public void call(RxStatus status) {
-                                if(status.isSuccess()) {
+                                if (status.isSuccess()) {
                                     // save current user
                                     saveCurrentUser(account);
                                     // credential saved
                                     mAccountObserver.onNext(account);
                                     mAccountObserver.onCompleted();
                                     finish();
-                                }
-                                else {
+                                } else {
                                     Throwable throwable = new Throwable(new Throwable(status.toString()));
                                     mAccountObserver.onError(throwable);
                                     finish();
                                 }
+                            }
+                        }, new Action1<Throwable>() {
+                            @Override
+                            public void call(Throwable throwable) {
+                                mAccountObserver.onError(new Throwable(throwable));
+                                finish();
                             }
                         });
             }

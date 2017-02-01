@@ -3,6 +3,7 @@ package com.pchmn.rxsocialauth.auth;
 
 import android.net.Uri;
 
+import com.google.android.gms.auth.api.credentials.IdentityProviders;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 
 public class RxAccount {
@@ -14,11 +15,12 @@ public class RxAccount {
     private String lastname;
     private String displayName;
     private Uri photoUri;
+    private String provider;
 
     public RxAccount() {
     }
 
-    public RxAccount(String id, String accessToken, String email, String firstname, String lastname, String displayName, Uri photoUri) {
+    public RxAccount(String id, String accessToken, String email, String firstname, String lastname, String displayName, Uri photoUri, String provider) {
         this.id = id;
         this.accessToken = accessToken;
         this.email = email;
@@ -26,6 +28,7 @@ public class RxAccount {
         this.lastname = lastname;
         this.displayName = displayName;
         this.photoUri = photoUri;
+        this.provider = provider;
     }
 
     public RxAccount(GoogleSignInAccount gsa) {
@@ -36,9 +39,11 @@ public class RxAccount {
         this.lastname = gsa.getFamilyName();
         this.displayName = gsa.getDisplayName();
         this.photoUri = gsa.getPhotoUrl();
+        this.provider = IdentityProviders.GOOGLE;
     }
 
     public RxAccount(RxAccount account) {
+        this.provider = account.getProvider();
         this.id = account.getId();
         this.accessToken = account.getAccessToken();
         this.email = account.getEmail();
@@ -102,5 +107,13 @@ public class RxAccount {
 
     public void setPhotoUri(Uri photoUri) {
         this.photoUri = photoUri;
+    }
+
+    public String getProvider() {
+        return provider;
+    }
+
+    public void setProvider(String provider) {
+        this.provider = provider;
     }
 }

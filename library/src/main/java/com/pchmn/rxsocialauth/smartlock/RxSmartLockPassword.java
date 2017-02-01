@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.credentials.Credential;
@@ -32,6 +33,7 @@ import rx.subjects.PublishSubject;
 import static com.pchmn.rxsocialauth.smartlock.RxSmartLockPassword.CredentialAction.DELETE;
 import static com.pchmn.rxsocialauth.smartlock.RxSmartLockPassword.CredentialAction.DISABLE_AUTO_SIGN_IN;
 import static com.pchmn.rxsocialauth.smartlock.RxSmartLockPassword.CredentialAction.REQUEST;
+import static com.pchmn.rxsocialauth.smartlock.RxSmartLockPassword.CredentialAction.REQUEST_AND_AUTO_SIGN_IN;
 import static com.pchmn.rxsocialauth.smartlock.RxSmartLockPassword.CredentialAction.SAVE;
 import static com.pchmn.rxsocialauth.smartlock.RxSmartLockPassword.CredentialAction.SAVE_WITH_OPTIONS;
 
@@ -47,9 +49,9 @@ public class RxSmartLockPassword {
     // credential action
     private static CredentialAction mCredentialAction;
     // publisher
-    private static PublishSubject<RxAccount> mAccountObserver;
-    private static PublishSubject<CredentialRequestResult> mRequestObserver;
-    private static PublishSubject<RxStatus> mStatusObserver;
+    private static PublishSubject<Object> mAccountObservable;
+    private static PublishSubject<CredentialRequestResult> mRequestObservable;
+    private static PublishSubject<RxStatus> mStatusObservable;
 
 
     /**
@@ -103,11 +105,23 @@ public class RxSmartLockPassword {
      *
      * @return an Observable
      */
-    public PublishSubject<RxAccount> requestCredential() {
-        mAccountObserver = PublishSubject.create();
+    public PublishSubject<CredentialRequestResult> requestCredential() {
+        mRequestObservable = PublishSubject.create();
         mCredentialAction = REQUEST;
         mContext.startActivity(getIntent());
-        return mAccountObserver;
+        return mRequestObservable;
+    }
+
+    /**
+     * Request credential and auto sign in user
+     *
+     * @return an Observable
+     */
+    public PublishSubject<Object> requestCredentialAndAutoSignIn() {
+        mAccountObservable = PublishSubject.create();
+        mCredentialAction = REQUEST_AND_AUTO_SIGN_IN;
+        mContext.startActivity(getIntent());
+        return mAccountObservable;
     }
 
     /**
@@ -117,11 +131,11 @@ public class RxSmartLockPassword {
      * @return an Observable
      */
     public PublishSubject<RxStatus> saveCredential(Credential credential) {
-        mStatusObserver = PublishSubject.create();
+        mStatusObservable = PublishSubject.create();
         mCredential = credential;
         mCredentialAction = SAVE;
         mContext.startActivity(getIntent());
-        return mStatusObserver;
+        return mStatusObservable;
     }
 
     /**
@@ -132,12 +146,12 @@ public class RxSmartLockPassword {
      * @return an Observable
      */
     public PublishSubject<RxStatus> saveCredential(Credential credential, SmartLockOptions smartLockOptions) {
-        mStatusObserver = PublishSubject.create();
+        mStatusObservable = PublishSubject.create();
         mCredential = credential;
         mSmartLockOptions = smartLockOptions;
         mCredentialAction = SAVE_WITH_OPTIONS;
         mContext.startActivity(getIntent());
-        return mStatusObserver;
+        return mStatusObservable;
     }
 
     /**
@@ -146,11 +160,11 @@ public class RxSmartLockPassword {
      * @return an Observable
      */
     public PublishSubject<RxStatus> deleteCredential(Credential credential) {
-        mStatusObserver = PublishSubject.create();
+        mStatusObservable = PublishSubject.create();
         mCredential = credential;
         mCredentialAction = DELETE;
         mContext.startActivity(getIntent());
-        return mStatusObserver;
+        return mStatusObservable;
     }
 
     /**
@@ -159,10 +173,10 @@ public class RxSmartLockPassword {
      * @return an Observable
      */
     public PublishSubject<RxStatus> disableAutoSignIn() {
-        mStatusObserver = PublishSubject.create();
+        mStatusObservable = PublishSubject.create();
         mCredentialAction = DISABLE_AUTO_SIGN_IN;
         mContext.startActivity(getIntent());
-        return mStatusObserver;
+        return mStatusObservable;
     }
 
     /**
@@ -211,6 +225,25 @@ public class RxSmartLockPassword {
 
             Auth.CredentialsApi.request(mCredentialsApiClient, mCredentialRequest).setResultCallback(
                     new ResultCallback<CredentialRequestResult>() {
+                        @Override
+                        public void onResult(@NonNull CredentialRequestResult credentialRequestResult) {
+                            mRequestObservable.onNext(credentialRequestResult);
+                            mRequestObservable.onCompleted();
+                            finish();
+                        }
+                    });
+        }
+
+        /**
+         * Request credential and auto sign in user
+         */
+        private void requestCredentialAndAutoSignIn() {
+            // disable auto sign in
+            if(mDisableAutoSignIn)
+                Auth.CredentialsApi.disableAutoSignIn(mCredentialsApiClient);
+
+            Auth.CredentialsApi.request(mCredentialsApiClient, mCredentialRequest).setResultCallback(
+                    new ResultCallback<CredentialRequestResult>() {
                 @Override
                 public void onResult(@NonNull CredentialRequestResult credentialRequestResult) {
                     if(credentialRequestResult.getStatus().isSuccess())
@@ -223,8 +256,14 @@ public class RxSmartLockPassword {
 
         private void onCredentialRetrieved(Credential credential) {
             String accountType = credential.getAccountType();
+            // login password account
+            if (accountType == null) {
+                mAccountObservable.onNext(credential);
+                mAccountObservable.onCompleted();
+                finish();
+            }
             // google account
-            if (accountType.equals(IdentityProviders.GOOGLE)) {
+            else if (accountType.equals(IdentityProviders.GOOGLE)) {
                 // build RxGoogleAuth object
                 RxGoogleAuth.Builder builder = new RxGoogleAuth.Builder(this).enableSmartLock(true);
                 GoogleOptions options = SmartLockHelper.getInstance(this)
@@ -247,14 +286,14 @@ public class RxSmartLockPassword {
                         .subscribe(new Action1<RxAccount>() {
                             @Override
                             public void call(RxAccount rxAccount) {
-                                mAccountObserver.onNext(rxAccount);
-                                mAccountObserver.onCompleted();
+                                mAccountObservable.onNext(rxAccount);
+                                mAccountObservable.onCompleted();
                                 finish();
                             }
                         }, new Action1<Throwable>() {
                             @Override
                             public void call(Throwable throwable) {
-                                mAccountObserver.onError(throwable);
+                                mAccountObservable.onError(throwable);
                                 finish();
                             }
                         });
@@ -282,14 +321,14 @@ public class RxSmartLockPassword {
                         .subscribe(new Action1<RxAccount>() {
                             @Override
                             public void call(RxAccount rxAccount) {
-                                mAccountObserver.onNext(rxAccount);
-                                mAccountObserver.onCompleted();
+                                mAccountObservable.onNext(rxAccount);
+                                mAccountObservable.onCompleted();
                                 finish();
                             }
                         }, new Action1<Throwable>() {
                             @Override
                             public void call(Throwable throwable) {
-                                mAccountObserver.onError(throwable);
+                                mAccountObservable.onError(throwable);
                                 finish();
                             }
                         });
@@ -302,13 +341,13 @@ public class RxSmartLockPassword {
                     status.startResolutionForResult(this, RC_READ);
                 } catch (IntentSender.SendIntentException e) {
                     e.printStackTrace();
-                    mAccountObserver.onError(new Throwable(new Throwable(e.getMessage())));
+                    mAccountObservable.onError(new Throwable(new Throwable(e.getMessage())));
                     finish();
                 }
             }
             else {
                 // The user must create an account or sign in manually.
-                mAccountObserver.onError(new Throwable(getString(R.string.status_canceled_request_credential)));
+                mAccountObservable.onError(new Throwable(getString(R.string.status_canceled_request_credential)));
                 finish();
             }
         }
@@ -325,8 +364,8 @@ public class RxSmartLockPassword {
                         // clear smart lock options
                         SmartLockHelper.getInstance(SmartLockHiddenActivity.this).resetSmartLockOptions();
                         // credential saved
-                        mStatusObserver.onNext(new RxStatus(status));
-                        mStatusObserver.onCompleted();
+                        mStatusObservable.onNext(new RxStatus(status));
+                        mStatusObservable.onCompleted();
                         finish();
                     }
                     else if(status.hasResolution()) {
@@ -337,13 +376,13 @@ public class RxSmartLockPassword {
                         } catch (IntentSender.SendIntentException e) {
                             // Could not resolve the request
                             Throwable throwable = new Throwable(new Throwable(e.getMessage()));
-                            mStatusObserver.onError(throwable);
+                            mStatusObservable.onError(throwable);
                             finish();
                         }
                     }
                     else {
                         // request has no resolution
-                        mStatusObserver.onCompleted();
+                        mStatusObservable.onCompleted();
                         finish();
                     }
                 }
@@ -363,8 +402,8 @@ public class RxSmartLockPassword {
                                 SmartLockHelper.getInstance(SmartLockHiddenActivity.this)
                                         .saveSmartLockOptions(mSmartLockOptions);
                                 // credential saved
-                                mStatusObserver.onNext(new RxStatus(status));
-                                mStatusObserver.onCompleted();
+                                mStatusObservable.onNext(new RxStatus(status));
+                                mStatusObservable.onCompleted();
                                 finish();
                             }
                             else if(status.hasResolution()) {
@@ -375,13 +414,13 @@ public class RxSmartLockPassword {
                                 } catch (IntentSender.SendIntentException e) {
                                     // Could not resolve the request
                                     Throwable throwable = new Throwable(new Throwable(e.getMessage()));
-                                    mStatusObserver.onError(throwable);
+                                    mStatusObservable.onError(throwable);
                                     finish();
                                 }
                             }
                             else {
                                 // request has no resolution
-                                mStatusObserver.onCompleted();
+                                mStatusObservable.onCompleted();
                                 finish();
                             }
                         }
@@ -395,8 +434,8 @@ public class RxSmartLockPassword {
             Auth.CredentialsApi.delete(mCredentialsApiClient, mCredential).setResultCallback(new ResultCallback<Status>() {
                 @Override
                 public void onResult(@NonNull Status status) {
-                    mStatusObserver.onNext(new RxStatus(status));
-                    mStatusObserver.onCompleted();
+                    mStatusObservable.onNext(new RxStatus(status));
+                    mStatusObservable.onCompleted();
                     finish();
                 }
             });
@@ -409,8 +448,8 @@ public class RxSmartLockPassword {
             Auth.CredentialsApi.disableAutoSignIn(mCredentialsApiClient).setResultCallback(new ResultCallback<Status>() {
                 @Override
                 public void onResult(@NonNull Status status) {
-                    mStatusObserver.onNext(new RxStatus(status));
-                    mStatusObserver.onCompleted();
+                    mStatusObservable.onNext(new RxStatus(status));
+                    mStatusObservable.onCompleted();
                     finish();
                 }
             });
@@ -426,26 +465,26 @@ public class RxSmartLockPassword {
                     onCredentialRetrieved(credential);
                 } else {
                     // The user must create an account or sign in manually.
-                    mAccountObserver.onError(new Throwable(getString(R.string.status_canceled_request_credential)));
+                    mAccountObservable.onError(new Throwable(getString(R.string.status_canceled_request_credential)));
                     finish();
                 }
             }
             else if (requestCode == RC_SAVE) {
                 if (resultCode == RESULT_OK) {
                     // credentials saved
-                    mStatusObserver.onNext(new RxStatus(
+                    mStatusObservable.onNext(new RxStatus(
                             CommonStatusCodes.SUCCESS,
                             getString(R.string.status_success_credential_saved_message)
                     ));
-                    mStatusObserver.onCompleted();
+                    mStatusObservable.onCompleted();
                     finish();
                 } else {
                     // cancel by user
-                    mStatusObserver.onNext(new RxStatus(
+                    mStatusObservable.onNext(new RxStatus(
                             CommonStatusCodes.CANCELED,
                             getString(R.string.status_canceled_credential_saved_message)
                     ));
-                    mStatusObserver.onCompleted();
+                    mStatusObservable.onCompleted();
                     finish();
                 }
             }
@@ -457,6 +496,9 @@ public class RxSmartLockPassword {
             switch (mCredentialAction) {
                 case REQUEST:
                     requestCredential();
+                    break;
+                case REQUEST_AND_AUTO_SIGN_IN:
+                    requestCredentialAndAutoSignIn();
                     break;
                 case SAVE:
                     saveCredential();
@@ -480,15 +522,15 @@ public class RxSmartLockPassword {
             // fix Error occurred when trying to propagate error to Observer.onError
             Throwable throwable = new Throwable(new Throwable(connectionResult.getErrorMessage()));
             if(mCredentialAction == REQUEST)
-                mRequestObserver.onError(throwable);
+                mAccountObservable.onError(throwable);
             else
-                mStatusObserver.onError(throwable);
+                mStatusObservable.onError(throwable);
 
             finish();
         }
     }
 
     enum CredentialAction {
-        REQUEST, SAVE, SAVE_WITH_OPTIONS, DELETE, DISABLE_AUTO_SIGN_IN
+        REQUEST, REQUEST_AND_AUTO_SIGN_IN, SAVE, SAVE_WITH_OPTIONS, DELETE, DISABLE_AUTO_SIGN_IN
     }
 }

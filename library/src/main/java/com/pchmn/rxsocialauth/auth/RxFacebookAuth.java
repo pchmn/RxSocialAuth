@@ -282,6 +282,7 @@ public class RxFacebookAuth implements IRxSocialAuth {
                                 if(profile != null) {
                                     // create social account
                                     RxAccount account = new RxAccount();
+                                    account.setProvider(IdentityProviders.FACEBOOK);
                                     // add info
                                     account.setId(profile.getId());
                                     account.setAccessToken(loginResult.getAccessToken().getToken());
@@ -352,6 +353,12 @@ public class RxFacebookAuth implements IRxSocialAuth {
                                     mAccountObserver.onError(throwable);
                                     finish();
                                 }
+                            }
+                        }, new Action1<Throwable>() {
+                            @Override
+                            public void call(Throwable throwable) {
+                                mAccountObserver.onError(new Throwable(throwable));
+                                finish();
                             }
                         });
             }
