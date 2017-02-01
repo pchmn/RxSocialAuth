@@ -263,6 +263,7 @@ Automatically sign users into your app by using the Credentials API to request a
 
 If you want to retrieve a Facebook account credential, for example, you have to call `.setAccountTypes(IdentityProviders.FACEBOOK)` on the builder of your `RxSmartLockPassword` object before.
 
+##### Request credential
 To retrieve user's stored credentials, use the `requestCredential()` method on a `RxSmartLockPassword` object. This method will emit a `Observable<CredentialRequestResult>`. 
 
 ```java
@@ -281,12 +282,16 @@ rxSmartLockPassword.requestCredential()
         });
 ```
 
+##### Request credential and auto sign in
 To retrieve user's stored credentials and automatically sign in the user with found credentials, use the `requestCredentialAndAutoSignIn()` method. It will emit a `Observable<Object>`.
 
-With this method you don't have to handle different cases. No matter if there is only one stored credential, or if there are multiple stored credentials, the `requestCredentialAndAutoSignIn()` method will do all the work.
+With this method you don't have to handle different cases. No matter if there is no stored credential, if there is only one stored credential, or if there are multiple stored credentials, the `requestCredentialAndAutoSignIn()` method will do all the work.
 
-If there is only one stored credential, or if the user picks one of the multiple stored credentials, this method will catch it. Then if the account type is Google or Facebook, the user will be sign in according to the provider, and the observer will receive a `RxAccount` object in case of success. If the account type is null, this is a login password credential. In this case, the observer will receive a `Credential` object, containing the id and the password, and you'll have to authenticate the user manually with the credential. 
-If the sig in fails or if the user cancels, a `Throwable` will be emitted.
+* If there is only one stored credential, or if the user picks one of the multiple stored credentials, this method will catch it :
+..* If the account type is Google or Facebook, the user will be sign in according to the provider, and the observer will receive a `RxAccount` object in case of success. If it fails a `Throwable` will be emitted.
+..* If the account type is null, this is a login password credential. In this case, the observer will receive a `Credential` object, containing the id and the password, and you'll have to authenticate the user manually with the credential. 
+
+* If the user cancels or if there is no stored credential, a `Throwable` will be emitted.
 
 ```java
 // request credential and auto sign in
