@@ -79,7 +79,7 @@ You can configure the builder with these methods :
 * `requestProfile()` : Request the profile (mandatory to get the profile picture) 
 * `requestIdToken(String clientId)` : Request an id token for authenticated users (mandatory to get the profile picture) 
 * `disableAutoSignIn()` : Clear the account previously selected by the user, so the user will have to pick an account
-* `enableSmartLock(boolean enable)` : Enable or disable smart lock password. If enabled, it will save automatically the credential in Smart Lock For Password
+* `enableSmartLock(boolean enable)` : Enable or disable Smart Lock For Passwords. If enabled, it will save automatically the credential in Smart Lock For Passwords
 
 #### Sign in and silent sign in
 With `signIn()` and `silentSignIn(Credential credential)` methods, the observer receive a `RxAccount` object in case of success.
@@ -155,10 +155,10 @@ You can configure the builder with these methods :
 * `requestEmail()` : Request the email 
 * `requestProfile()` : Request the profile (mandatory to get the profile picture) 
 * `requestPhotoSize(int width, int height)` : Request a specific photo size, cause request profile
-* `enableSmartLock(boolean enable)` : Enable or disable smart lock password. If enabled, it will save automatically the credential in Smart Lock For Password
+* `enableSmartLock(boolean enable)` : Enable or disable Smart Lock For Passwords. If enabled, it will save automatically the credential in Smart Lock For Passwords
 
 #### Sign in 
-Like with Google Sign-In, the `signIn()` method will return an observer. And this observer will receive a `RxAccount` object in case of success.
+Like with Google Sign-In, the `signIn()` method will return an observable. And the observer will receive a `RxAccount` object in case of success.
 ```java
 // sign in
 rxFacebookAuth.signIn()
@@ -187,3 +187,43 @@ rxFacebookAuth.signOut()
             Log.e(TAG, throwable.getMessage());
         });
 ```
+
+### Smart Lock For Passwords
+Create a `RxSmartLockPassword` object using the `RxSmartLockPassword.Builder` builder.
+```java
+// build RxSmartLockPassword object
+// 'this' represents a Context
+// request smart lock credential on launch
+RxSmartLockPassword rxSmartLockPassword = new RxSmartLockPassword.Builder(this)
+        .disableAutoSignIn()
+        .setAccountTypes(IdentityProviders.GOOGLE, IdentityProviders.FACEBOOK)
+        .build()
+```
+You can configure the builder with these methods : 
+* `setAccountTypes(String... accountTypes)` : Sets the account types (identity providers)
+* `setPasswordLoginSupported(boolean supported)` : Enables returning credentials with a password, that is verified by the application
+* `disableAutoSignIn()` : Disable auto sign 
+
+#### Retrieve a user's stored credentials
+Automatically sign users into your app by using the Credentials API to request and retrieve stored credentials for your users.
+
+Use the `requestCredential()` method on a `RxSmartLockPassword` object. If you want to retrieve a Facebook account credential, for example, you have to call `.setAccountTypes(IdentityProviders.FACEBOOK)` on the builder of your `RxSmartLockPassword` object before.
+
+You don't have to handle different cases. No matter if there is only one stored credential, or if there are multiple stored credentials, the `requestCredential()` method will do all the work.
+
+If there is only one stored credential, or if the user pick one of the multiple stored credentials, the user will be signed in according to the provider, and the observer will receive a `RxAccount` object in case of success. If the user cancel a `Throwable` will be emitted.
+
+```java
+// request credential
+rxSmartLockPassword.requestCredential()
+        .subscribe(rxAccount -> {
+            // user is signed in
+            // use the rxAccount object as you want
+            Log.d(TAG, "name: " + rxAccount.getDisplayName());
+            Log.d(TAG, "email: " + rxAccount.getEmail());
+            
+        }, throwable -> {
+            Log.e(TAG, throwable.getMessage());
+        });
+```
+
