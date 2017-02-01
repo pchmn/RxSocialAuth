@@ -297,6 +297,9 @@ rxSmartLockPassword.deleteCredential(Credential credential)
 ## Sample
 A sample app with some use cases of the library is available on this [link](https://github.com/pchmn/RxSocialAuth/tree/master/sample)
 
+## Status
+This library is currently in beta
+
 ## Credits
 This library was greatly inspired by [SocialLoginManager](https://github.com/jaychang0917/SocialLoginManager)
 
