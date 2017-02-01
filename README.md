@@ -80,8 +80,7 @@ You can configure the builder with these methods :
 * `disableAutoSignIn()` : Clear the account previously selected by the user, so the user will have to pick an account
 * `enableSmartLock(boolean enable)` : Enable or disable smart lock password. If enabled, it will save automatically the credential in Smart Lock For Password
 
-Then you can use these `signIn()`, `silentSignIn(Credential credential)`, `signOut()` and `revokeAccess()` methods of the `RxGoogleAuth` object.
-
+##### Sign in and silent sign in
 With `signIn()` and `silentSignIn(Credential credential)` methods, the observer receive a `RxAccount` object in case of success.
 ```java
 // sign in
@@ -109,6 +108,7 @@ rxGoogleAuth.silentSignIn(Credential credential)
         });
 ```
 
+##### Sign out and revoke access
 With `signOut()` and `revokeAccess()` methods, the observer receive a `RxStatus` object in case of success.
 ```java
 // sign out
