@@ -65,6 +65,7 @@ If you have trouble when trying to authenticate users, maybe you have to add the
 
 #### RxAccount
 This class represents a social account and has these methods :
+* `String getProvider()`
 * `String getId()`
 * `String getAccessToken()`
 * `String getEmail()`
@@ -306,6 +307,7 @@ rxSmartLockPassword.requestCredentialAndAutoSignIn()
              else if(o instanceof Credential) {
                 // credential contains login and password
                 Credential credential = (Credential) o;
+                // sign in manually
                 signInWithLoginPassword(credential.getId(), credential.getPassword());
              }
 
