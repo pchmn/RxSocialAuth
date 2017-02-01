@@ -65,6 +65,7 @@ This class represents the status of a request and has these methods :
 Create a `RxGoogleAuth` object using the `RxGoogleAuth.Builder` builder.
 ```java
 // build RxGoogleAuth object
+// 'this' represents a Context
 RxGoogleAuth rxGoogleAuth = new RxGoogleAuth.Builder(this)
         .requestIdToken(getString(R.string.oauth_google_key))
         .requestEmail()
@@ -80,7 +81,7 @@ You can configure the builder with these methods :
 * `disableAutoSignIn()` : Clear the account previously selected by the user, so the user will have to pick an account
 * `enableSmartLock(boolean enable)` : Enable or disable smart lock password. If enabled, it will save automatically the credential in Smart Lock For Password
 
-##### Sign in and silent sign in
+#### Sign in and silent sign in
 With `signIn()` and `silentSignIn(Credential credential)` methods, the observer receive a `RxAccount` object in case of success.
 ```java
 // sign in
@@ -108,7 +109,7 @@ rxGoogleAuth.silentSignIn(Credential credential)
         });
 ```
 
-##### Sign out and revoke access
+#### Sign out and revoke access
 With `signOut()` and `revokeAccess()` methods, the observer receive a `RxStatus` object in case of success.
 ```java
 // sign out
@@ -121,6 +122,7 @@ rxGoogleAuth.signOut()
             Log.e(TAG, throwable.getMessage());
         });
        
+       
 // revoke access
 rxGoogleAuth.revokeAccess()
         .subscribe(rxStatus -> {
@@ -130,4 +132,52 @@ rxGoogleAuth.revokeAccess()
         throwable -> {
             Log.e(TAG, throwable.getMessage());
         }); 
+```
+
+
+### Facebook Login
+Create a `RxFacebookAuth` object using the `RxFacebookAuth.Builder` builder.
+```java
+// build RxFacebookAuth object
+// 'this' represents a Context
+RxFacebookAuth rxFacebookAuth = new RxFacebookAuth.Builder(this)
+        .enableSmartLock(true)
+        .requestEmail()
+        .requestProfile()
+        .requestPhotoSize(200, 200)
+        .build();
+```
+You can configure the builder with these methods : 
+* `requestEmail()` : Request the email 
+* `requestProfile()` : Request the profile (mandatory to get the profile picture) 
+* `requestPhotoSize(int width, int height)` : Request a specific photo size, cause request profile
+* `enableSmartLock(boolean enable)` : Enable or disable smart lock password. If enabled, it will save automatically the credential in Smart Lock For Password
+
+#### Sign in 
+Like with Google Sign-In, the `signIn()` method will return an observer. And this observer will receive a `RxAccount` object in case of success.
+```java
+// sign in
+rxFacebookAuth.signIn()
+        .subscribe(rxAccount -> {
+            // user is signed in
+            // use the rxAccount object as you want
+            Log.d(TAG, "name: " + rxAccount.getDisplayName());
+        }, 
+        throwable -> {
+            Log.e(TAG, throwable.getMessage());
+        });
+```
+
+#### Sign out 
+With `signOut()` method, the observer receive a `RxStatus` object in case of success.
+```java
+// sign out
+rxFacebookAuth.signOut()
+        .subscribe(rxStatus -> {
+            if(rxStatus.isSuccess())
+                // user is signed out
+        }, 
+        throwable -> {
+            Log.e(TAG, throwable.getMessage());
+        });
 ```
