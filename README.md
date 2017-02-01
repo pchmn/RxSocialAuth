@@ -188,6 +188,37 @@ rxFacebookAuth.signOut()
         });
 ```
 
+### RxAuthSocial
+This class permits to access and sign out the current account without knowing if it is a Google account or a Facebook account. For example it is useful when you want to signed out the current user but you don't know if he/she is connected with a Google or a Facebook account.
+This class use the singleton pattern.
+
+#### Sign out
+This method will signed out the current user from the app, and from the current provider. It will also disable auto sign in for Smart Lock for Passwords and for the current provider. So the user will be able to pick an other account when using the authentication method again.
+
+```java
+// sign out
+// 'this' represents a context
+RxSocialAuth.getInstance(this).signOut()
+        .subscribe(rxStatus -> {
+            if(rxStatus.isSuccess()) {
+                // user is signed out
+            }
+            
+            }, throwable -> {
+                    Log.e(TAG, throwable.getMessage());
+            });
+```
+
+#### Get current user
+This method return a `RxAccount` object representing the current user in the app. If the user is signed out, the `RxAccount` object will be null.
+
+```java
+// current user
+// 'this' represents a context
+RxAccount currentUser = RxSocialAuth.getInstance(this).getCurrentUser();
+```
+
+
 ### Smart Lock For Passwords
 Create a `RxSmartLockPassword` object using the `RxSmartLockPassword.Builder` builder.
 ```java
@@ -231,6 +262,8 @@ After users successfully sign in, create accounts, or change passwords, allow th
 
 To store a user's credentials, use the `saveCredential(Credential credential)` method on a `RxSmartLockPassword` object. In case of success the observer will receive a `RxStatus` object.
 
+If you used `RxGoogleAuth` or `RxFacebookAuth` with the `enableSmartLock(true)` option, the credential is stored automatically, and you don't have to use this method.
+
 ```java
 // save credential
 rxSmartLockPassword.saveCredential(Credential credential)
@@ -260,3 +293,4 @@ rxSmartLockPassword.deleteCredential(Credential credential)
             Log.e(TAG, throwable.getMessage());
         });
 ```
+
