@@ -7,7 +7,9 @@ import android.util.Log;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.google.android.gms.auth.api.credentials.Credential;
 import com.google.android.gms.auth.api.credentials.IdentityProviders;
+import com.pchmn.rxsocialauth.auth.RxAccount;
 import com.pchmn.rxsocialauth.auth.RxFacebookAuth;
 import com.pchmn.rxsocialauth.auth.RxGoogleAuth;
 import com.pchmn.rxsocialauth.smartlock.RxSmartLockPassword;
@@ -31,27 +33,38 @@ public class AuthActivity extends AppCompatActivity {
         ButterKnife.bind(this);
 
         // request smart lock credential on launch
+        Log.e(TAG, "in activity");
         new RxSmartLockPassword.Builder(this)
                 .disableAutoSignIn()
                 .setAccountTypes(IdentityProviders.GOOGLE, IdentityProviders.FACEBOOK)
                 .build()
-                .requestCredential()
-                .subscribe(rxAccount -> {
-                    // log info
-                    Log.d(TAG, "userId: " + rxAccount.getId());
-                    Log.d(TAG, "photoUrl: " +
-                            (rxAccount.getPhotoUri() != null? rxAccount.getPhotoUri().toString(): ""));
-                    Log.d(TAG, "accessToken: " + rxAccount.getAccessToken());
-                    Log.d(TAG, "firstname: " + rxAccount.getFirstname());
-                    Log.d(TAG, "lastname: " + rxAccount.getLastname());
-                    Log.d(TAG, "name: " + rxAccount.getDisplayName());
-                    Log.d(TAG, "email: " + rxAccount.getEmail());
+                .requestCredentialAndAutoSignIn()
+                .subscribe(o -> {
+                    if(o instanceof RxAccount) {
+                        // user is signed in using google or facebook
+                        RxAccount rxAccount = (RxAccount) o;
+                        // log info
+                        Log.d(TAG, "provider: " + rxAccount.getProvider());
+                        Log.d(TAG, "userId: " + rxAccount.getId());
+                        Log.d(TAG, "photoUrl: " +
+                                (rxAccount.getPhotoUri() != null? rxAccount.getPhotoUri().toString(): ""));
+                        Log.d(TAG, "accessToken: " + rxAccount.getAccessToken());
+                        Log.d(TAG, "firstname: " + rxAccount.getFirstname());
+                        Log.d(TAG, "lastname: " + rxAccount.getLastname());
+                        Log.d(TAG, "name: " + rxAccount.getDisplayName());
+                        Log.d(TAG, "email: " + rxAccount.getEmail());
 
-                    Toast.makeText(AuthActivity.this, "Hello " + rxAccount.getDisplayName(),
-                            Toast.LENGTH_SHORT).show();
-                    // go to main activity
-                    startActivity(new Intent(AuthActivity.this, MainActivity.class));
-                    finish();
+                        Toast.makeText(AuthActivity.this, "Hello " + rxAccount.getDisplayName(),
+                                Toast.LENGTH_SHORT).show();
+                        // go to main activity
+                        startActivity(new Intent(AuthActivity.this, MainActivity.class));
+                        finish();
+                    }
+                    else if(o instanceof Credential) {
+                        // credential contains login and password
+                        Credential credential = (Credential) o;
+                        signInWithLoginPassword(credential.getId(), credential.getPassword());
+                    }
 
                 }, throwable -> {
                     Log.e(TAG, throwable.getMessage());
@@ -73,6 +86,7 @@ public class AuthActivity extends AppCompatActivity {
         rxGoogleAuth.signIn()
                 .subscribe(rxAccount -> {
                     // log info
+                    Log.d(TAG, "provider: " + rxAccount.getProvider());
                     Log.d(TAG, "userId: " + rxAccount.getId());
                     Log.d(TAG, "photoUrl: " +
                             (rxAccount.getPhotoUri() != null? rxAccount.getPhotoUri().toString(): ""));
@@ -107,8 +121,10 @@ public class AuthActivity extends AppCompatActivity {
         rxFacebookAuth.signIn()
                 .subscribe(rxAccount -> {
                     // log info
+                    Log.d(TAG, "provider: " + rxAccount.getProvider());
                     Log.d(TAG, "userId: " + rxAccount.getId());
-                    Log.d(TAG, "photoUrl: " + rxAccount.getPhotoUri().toString());
+                    Log.d(TAG, "photoUrl: " +
+                            (rxAccount.getPhotoUri() != null? rxAccount.getPhotoUri().toString(): ""));
                     Log.d(TAG, "accessToken: " + rxAccount.getAccessToken());
                     Log.d(TAG, "firstname: " + rxAccount.getFirstname());
                     Log.d(TAG, "lastname: " + rxAccount.getLastname());
@@ -124,6 +140,16 @@ public class AuthActivity extends AppCompatActivity {
                 }, throwable -> {
                     Log.e(TAG, throwable.getMessage());
                 });
+    }
+
+    private void signInWithLoginPassword(String login, String password) {
+        // authenticate the user like you want
+        // here we'll just go to the main activity
+        Toast.makeText(AuthActivity.this, "Hello " + login,
+                Toast.LENGTH_SHORT).show();
+        // go to main activity
+        startActivity(new Intent(AuthActivity.this, MainActivity.class));
+        finish();
     }
 
 }

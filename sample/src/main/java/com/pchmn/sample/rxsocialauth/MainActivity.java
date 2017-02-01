@@ -22,15 +22,23 @@ public class MainActivity extends AppCompatActivity {
         ButterKnife.bind(this);
 
         RxAccount currentUser = RxSocialAuth.getInstance(this).getCurrentUser();
-        // log info
-        Log.d(TAG, "current user userId: " + currentUser.getId());
-        Log.d(TAG, "current user photoUrl: " +
-                (currentUser.getPhotoUri() != null? currentUser.getPhotoUri().toString(): ""));
-        Log.d(TAG, "current user accessToken: " + currentUser.getAccessToken());
-        Log.d(TAG, "current user firstname: " + currentUser.getFirstname());
-        Log.d(TAG, "current user lastname: " + currentUser.getLastname());
-        Log.d(TAG, "current user name: " + currentUser.getDisplayName());
-        Log.d(TAG, "current user email: " + currentUser.getEmail());
+        if(currentUser == null) {
+            // go to auth activity
+            startActivity(new Intent(MainActivity.this, AuthActivity.class));
+            finish();
+        }
+        else {
+            // log info
+            Log.d(TAG, "current user provider: " + currentUser.getProvider());
+            Log.d(TAG, "current user userId: " + currentUser.getId());
+            Log.d(TAG, "current user photoUrl: " +
+                    (currentUser.getPhotoUri() != null? currentUser.getPhotoUri().toString(): ""));
+            Log.d(TAG, "current user accessToken: " + currentUser.getAccessToken());
+            Log.d(TAG, "current user firstname: " + currentUser.getFirstname());
+            Log.d(TAG, "current user lastname: " + currentUser.getLastname());
+            Log.d(TAG, "current user name: " + currentUser.getDisplayName());
+            Log.d(TAG, "current user email: " + currentUser.getEmail());
+        }
     }
 
     @OnClick(R.id.sign_out_button)
