@@ -14,6 +14,7 @@ import com.facebook.FacebookSdk;
 import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
 import com.facebook.Profile;
+import com.facebook.ProfileTracker;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.google.android.gms.auth.api.credentials.Credential;
@@ -179,6 +180,7 @@ public class RxFacebookAuth implements IRxSocialAuth {
 
         // facebook auth
         private CallbackManager mCallbackManager;
+        private ProfileTracker mProfileTracker;
 
         @Override
         protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -192,14 +194,29 @@ public class RxFacebookAuth implements IRxSocialAuth {
             LoginManager.getInstance().registerCallback(mCallbackManager,
                     new FacebookCallback<LoginResult>() {
                         @Override
-                        public void onSuccess(LoginResult loginResult) {
-                            handleLogInResult(loginResult);
+                        public void onSuccess(final LoginResult loginResult) {
+                            if(Profile.getCurrentProfile() == null) {
+                                mProfileTracker = new ProfileTracker() {
+                                    @Override
+                                    protected void onCurrentProfileChanged(Profile profile, Profile profile2) {
+                                        // profile2 is the new profile
+                                        Profile.setCurrentProfile(profile2);
+                                        mProfileTracker.stopTracking();
+                                        handleLogInResult(loginResult);
+                                    }
+                                };
+                                // no need to call startTracking() on mProfileTracker
+                                // because it is called by its constructor, internally.
+                            }
+                            else {
+                                handleLogInResult(loginResult);
+                            }
                         }
 
                         @Override
                         public void onCancel() {
                             Throwable throwable = new Throwable(
-                                    getString(R.string.status_canceled_email_facebook));
+                                    getString(R.string.status_canceled_by_user));
                             mAccountObserver.onError(throwable);
                             finish();
                         }
@@ -312,7 +329,7 @@ public class RxFacebookAuth implements IRxSocialAuth {
                     });
             // launch graph request
             Bundle parameters = new Bundle();
-            parameters.putString("fields", "email");
+            parameters.putString("fields", "email,id,first_name,last_name,name");
             request.setParameters(parameters);
             request.executeAsync();
         }
@@ -324,7 +341,11 @@ public class RxFacebookAuth implements IRxSocialAuth {
          */
         @Override
         public void verifySmartLockIsEnabled(final RxAccount account) {
-            if(mEnableSmartLock) {
+            if(account.getEmail() == null || account.getEmail().equals("")) {
+                mAccountObserver.onError(new Throwable(getString(R.string.status_canceled_email_facebook)));
+                finish();
+            }
+            else if(mEnableSmartLock) {
                 Credential credential = new Credential.Builder(account.getEmail())
                         .setAccountType(IdentityProviders.FACEBOOK)
                         .setName(account.getDisplayName())

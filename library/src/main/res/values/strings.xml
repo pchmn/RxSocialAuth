@@ -7,6 +7,7 @@
     <string name="status_canceled_credential_saved_message">User canceled credential saving</string>
     <string name="status_canceled_request_credential">Request credential canceled</string>
     <string name="status_canceled_email_facebook">User canceled email permission</string>
+    <string name="status_canceled_by_user">User canceled the request</string>
 
     <string name="preference_smartlock_helper">com.pchmn.rxsocialauth.SmartLockHelper</string>
     <string name="preference_current_user">com.pchmn.rxsocialauth.CurrentUser</string>

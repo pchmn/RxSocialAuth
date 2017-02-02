@@ -33,7 +33,6 @@ public class AuthActivity extends AppCompatActivity {
         ButterKnife.bind(this);
 
         // request smart lock credential on launch
-        Log.e(TAG, "in activity");
         new RxSmartLockPassword.Builder(this)
                 .disableAutoSignIn()
                 .setAccountTypes(IdentityProviders.GOOGLE, IdentityProviders.FACEBOOK)

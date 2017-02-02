@@ -9,7 +9,6 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.credentials.Credential;
@@ -27,7 +26,9 @@ import com.pchmn.rxsocialauth.auth.RxFacebookAuth;
 import com.pchmn.rxsocialauth.auth.RxGoogleAuth;
 import com.pchmn.rxsocialauth.auth.RxStatus;
 
+import rx.Observable;
 import rx.functions.Action1;
+import rx.functions.Func1;
 import rx.subjects.PublishSubject;
 
 import static com.pchmn.rxsocialauth.smartlock.RxSmartLockPassword.CredentialAction.DELETE;
@@ -199,11 +200,14 @@ public class RxSmartLockPassword {
         private GoogleApiClient mCredentialsApiClient;
         private static final int RC_READ = 0;
         private static final int RC_SAVE = 1;
+        private static final int RC_SAVE_INTERN = 2;
+        private PublishSubject<RxAccount> mAccountObservableIntern;
+        private RxAccount mCurrentAccount;
 
         @Override
         protected void onCreate(@Nullable Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            setContentView(R.layout.activity_smart_lock_hidden);
+            setContentView(R.layout.activity_hidden_loading);
 
             // smart lock password
             mCredentialsApiClient = new GoogleApiClient.Builder(this)
@@ -265,8 +269,8 @@ public class RxSmartLockPassword {
             // google account
             else if (accountType.equals(IdentityProviders.GOOGLE)) {
                 // build RxGoogleAuth object
-                RxGoogleAuth.Builder builder = new RxGoogleAuth.Builder(this).enableSmartLock(true);
-                GoogleOptions options = SmartLockHelper.getInstance(this)
+                RxGoogleAuth.Builder builder = new RxGoogleAuth.Builder(this);
+                final GoogleOptions options = SmartLockHelper.getInstance(this)
                         .getGoogleSmartLockOptions();
 
                 if(options != null) {
@@ -282,7 +286,7 @@ public class RxSmartLockPassword {
                 }
 
                 // silent sign in
-                builder.build().silentSignIn(credential)
+                /*builder.build().silentSignIn(credential)
                         .subscribe(new Action1<RxAccount>() {
                             @Override
                             public void call(RxAccount rxAccount) {
@@ -296,13 +300,43 @@ public class RxSmartLockPassword {
                                 mAccountObservable.onError(throwable);
                                 finish();
                             }
+                        });*/
+
+                builder.build().silentSignIn(credential)
+                        .flatMap(new Func1<RxAccount, Observable<RxAccount>>() {
+                            @Override
+                            public Observable<RxAccount> call(RxAccount account) {
+                                mCurrentAccount = account;
+                                Credential newCredential = new Credential.Builder(account.getEmail())
+                                        .setAccountType(IdentityProviders.GOOGLE)
+                                        .setName(account.getDisplayName())
+                                        .setProfilePictureUri(account.getPhotoUri())
+                                        .build();
+                                // save credentials
+                                return saveCredentialWithOptions(newCredential, options);
+                            }
+                        })
+                        .subscribe(new Action1<RxAccount>() {
+                            @Override
+                            public void call(RxAccount account) {
+                                mAccountObservable.onNext(account);
+                                mAccountObservable.onCompleted();
+                                finish();
+                            }
+
+                        }, new Action1<Throwable>() {
+                            @Override
+                            public void call(Throwable throwable) {
+                                mAccountObservable.onError(throwable);
+                                finish();
+                            }
                         });
             }
             // facebook account
             else if(accountType.equals(IdentityProviders.FACEBOOK)) {
                 // build rxFacebookAuth object
-                RxFacebookAuth.Builder builder = new RxFacebookAuth.Builder(this).enableSmartLock(true);
-                FacebookOptions options = SmartLockHelper.getInstance(this)
+                RxFacebookAuth.Builder builder = new RxFacebookAuth.Builder(this);
+                final FacebookOptions options = SmartLockHelper.getInstance(this)
                         .getFacebookSmartLockOptions();
 
                 if(options != null) {
@@ -317,7 +351,7 @@ public class RxSmartLockPassword {
                 }
 
                 // sign in
-                builder.build().signIn()
+                /*builder.build().signIn()
                         .subscribe(new Action1<RxAccount>() {
                             @Override
                             public void call(RxAccount rxAccount) {
@@ -325,6 +359,35 @@ public class RxSmartLockPassword {
                                 mAccountObservable.onCompleted();
                                 finish();
                             }
+                        }, new Action1<Throwable>() {
+                            @Override
+                            public void call(Throwable throwable) {
+                                mAccountObservable.onError(throwable);
+                                finish();
+                            }
+                        });*/
+                builder.build().signIn()
+                        .flatMap(new Func1<RxAccount, Observable<RxAccount>>() {
+                            @Override
+                            public Observable<RxAccount> call(RxAccount account) {
+                                mCurrentAccount = account;
+                                Credential newCredential = new Credential.Builder(account.getEmail())
+                                        .setAccountType(IdentityProviders.FACEBOOK)
+                                        .setName(account.getDisplayName())
+                                        .setProfilePictureUri(account.getPhotoUri())
+                                        .build();
+                                // save credentials
+                                return saveCredentialWithOptions(newCredential, options);
+                            }
+                        })
+                        .subscribe(new Action1<RxAccount>() {
+                            @Override
+                            public void call(RxAccount account) {
+                                mAccountObservable.onNext(account);
+                                mAccountObservable.onCompleted();
+                                finish();
+                            }
+
                         }, new Action1<Throwable>() {
                             @Override
                             public void call(Throwable throwable) {
@@ -428,6 +491,59 @@ public class RxSmartLockPassword {
         }
 
         /**
+         * Save credential in smart lock for passwords and save options as well
+         *
+         * @param credential the credential
+         * @param options the options
+         * @return an Observable
+         */
+        private PublishSubject<RxAccount> saveCredentialWithOptions(Credential credential,
+                                                                    final SmartLockOptions options) {
+            mAccountObservableIntern = PublishSubject.create();
+
+            Auth.CredentialsApi.save(mCredentialsApiClient, credential).setResultCallback(
+                    new ResultCallback<Status>() {
+                        @Override
+                        public void onResult(@NonNull Status status) {
+                            if (status.isSuccess()) {
+                                // save options
+                                SmartLockHelper.getInstance(SmartLockHiddenActivity.this)
+                                        .saveSmartLockOptions(options);
+                                // credential saved
+                                mAccountObservableIntern.onNext(mCurrentAccount);
+                                mAccountObservableIntern.onCompleted();
+                                // reset current account
+                                mCurrentAccount = null;
+                                finish();
+                            }
+                            else if(status.hasResolution()) {
+                                // Try to resolve the save request. This will prompt the user if
+                                // the credential is new.
+                                try {
+                                    status.startResolutionForResult(SmartLockHiddenActivity.this, RC_SAVE_INTERN);
+                                } catch (IntentSender.SendIntentException e) {
+                                    // Could not resolve the request
+                                    Throwable throwable = new Throwable(new Throwable(e.getMessage()));
+                                    mAccountObservableIntern.onError(throwable);
+                                    // reset current account
+                                    mCurrentAccount = null;
+                                    finish();
+                                }
+                            }
+                            else {
+                                // request has no resolution
+                                mAccountObservableIntern.onCompleted();
+                                // reset current account
+                                mCurrentAccount = null;
+                                finish();
+                            }
+                        }
+                    });
+
+            return mAccountObservableIntern;
+        }
+
+        /**
          * Delete credential
          */
         private void deleteCredential() {
@@ -485,6 +601,23 @@ public class RxSmartLockPassword {
                             getString(R.string.status_canceled_credential_saved_message)
                     ));
                     mStatusObservable.onCompleted();
+                    finish();
+                }
+            }
+            else if (requestCode == RC_SAVE_INTERN) {
+                if (resultCode == RESULT_OK) {
+                    // credentials saved
+                    mAccountObservableIntern.onNext(mCurrentAccount);
+                    mAccountObservableIntern.onCompleted();
+                    // reset current account
+                    mCurrentAccount = null;
+                    finish();
+                } else {
+                    // cancel by user
+                    mAccountObservableIntern.onNext(mCurrentAccount);
+                    mAccountObservableIntern.onCompleted();
+                    // reset current account
+                    mCurrentAccount = null;
                     finish();
                 }
             }
