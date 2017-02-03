@@ -1,7 +1,9 @@
 ## CHANGELOG
 
-### 2.0.0-beta
+### 2.0.1-beta
+* fix fragment manager already executing transaction exception
 
+### 2.0.0-beta
 * change shadow activities to shadow fragments
 * fix memory leak with RxSocialAuth singleton
 * rename RxSmartLockPassword to RxSmartLockPasswords

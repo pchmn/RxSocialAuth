@@ -76,12 +76,18 @@ public class RxSmartLockPasswords {
      * @return a RxSmartLockPasswordsFragment
      */
     private RxSmartLockPasswordsFragment getRxFacebookAuthFragment(Builder builder) {
+        FragmentManager fragmentManager = mActivity.getSupportFragmentManager();
+
+        // prevent fragment manager already executing transaction
+        int stackCount = fragmentManager.getBackStackEntryCount();
+        if( fragmentManager.getFragments() != null )
+            fragmentManager = fragmentManager.getFragments().get( stackCount > 0 ? stackCount-1 : stackCount ).getChildFragmentManager();
+
         RxSmartLockPasswordsFragment rxSmartLockPasswordsFragment = (RxSmartLockPasswordsFragment)
-                mActivity.getSupportFragmentManager().findFragmentByTag(RxSmartLockPasswordsFragment.TAG);
+                fragmentManager.findFragmentByTag(RxSmartLockPasswordsFragment.TAG);
 
         if (rxSmartLockPasswordsFragment == null) {
             rxSmartLockPasswordsFragment = RxSmartLockPasswordsFragment.newInstance(builder);
-            FragmentManager fragmentManager = mActivity.getSupportFragmentManager();
             fragmentManager
                     .beginTransaction()
                     .add(rxSmartLockPasswordsFragment, RxSmartLockPasswordsFragment.TAG)
@@ -121,7 +127,7 @@ public class RxSmartLockPasswords {
      */
     public PublishSubject<RxStatus> saveCredential(Credential credential) {
         mStatusSubject = PublishSubject.create();
-        mRxSmartLockPasswordsFragment.saveCredential(mStatusSubject, credential);
+        mRxSmartLockPasswordsFragment.saveCredential(mStatusSubject, credential, null);
         return mStatusSubject;
     }
 
@@ -134,7 +140,7 @@ public class RxSmartLockPasswords {
      */
     public PublishSubject<RxStatus> saveCredential(Credential credential, SmartLockOptions smartLockOptions) {
         mStatusSubject = PublishSubject.create();
-        mRxSmartLockPasswordsFragment.saveCredentialWithOptions(mStatusSubject, credential, smartLockOptions);
+        mRxSmartLockPasswordsFragment.saveCredential(mStatusSubject, credential, smartLockOptions);
         return mStatusSubject;
     }
 

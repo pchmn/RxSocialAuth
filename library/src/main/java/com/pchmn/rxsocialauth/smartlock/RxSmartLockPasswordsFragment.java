@@ -56,7 +56,7 @@ public class RxSmartLockPasswordsFragment extends Fragment implements GoogleApiC
     private PublishSubject<CredentialRequestResult> mRequestSubject;
     // current account
     private RxAccount mCurrentAccount;
-    private PublishSubject<RxAccount> mAccountObservableIntern;
+    private PublishSubject<RxAccount> mAccountSubjectIntern;
 
 
     public static RxSmartLockPasswordsFragment newInstance(RxSmartLockPasswords.Builder builder) {
@@ -162,7 +162,7 @@ public class RxSmartLockPasswordsFragment extends Fragment implements GoogleApiC
                                     .setProfilePictureUri(account.getPhotoUri())
                                     .build();
                             // save credentials
-                            return saveCredentialWithOptions(newCredential, options);
+                            return saveCredentialIntern(newCredential, options);
                         }
                     })
                     .subscribe(new Action1<RxAccount>() {
@@ -212,7 +212,7 @@ public class RxSmartLockPasswordsFragment extends Fragment implements GoogleApiC
                                     .setProfilePictureUri(account.getPhotoUri())
                                     .build();
                             // save credentials
-                            return saveCredentialWithOptions(newCredential, options);
+                            return saveCredentialIntern(newCredential, options);
                         }
                     })
                     .subscribe(new Action1<RxAccount>() {
@@ -265,9 +265,9 @@ public class RxSmartLockPasswordsFragment extends Fragment implements GoogleApiC
      * @param options the options
      * @return an Observable
      */
-    private PublishSubject<RxAccount> saveCredentialWithOptions(Credential credential,
-                                                                final SmartLockOptions options) {
-        mAccountObservableIntern = PublishSubject.create();
+    private PublishSubject<RxAccount> saveCredentialIntern(Credential credential,
+                                                           final SmartLockOptions options) {
+        mAccountSubjectIntern = PublishSubject.create();
 
         Auth.CredentialsApi.save(mCredentialsApiClient, credential).setResultCallback(
                 new ResultCallback<Status>() {
@@ -279,8 +279,8 @@ public class RxSmartLockPasswordsFragment extends Fragment implements GoogleApiC
                                     .saveSmartLockOptions(options);
                             // credential saved
                             mCredentialsApiClient.disconnect();
-                            mAccountObservableIntern.onNext(mCurrentAccount);
-                            mAccountObservableIntern.onCompleted();
+                            mAccountSubjectIntern.onNext(mCurrentAccount);
+                            mAccountSubjectIntern.onCompleted();
                             // reset current account
                             mCurrentAccount = null;
 
@@ -293,7 +293,7 @@ public class RxSmartLockPasswordsFragment extends Fragment implements GoogleApiC
                             } catch (IntentSender.SendIntentException e) {
                                 // Could not resolve the request
                                 mCredentialsApiClient.disconnect();
-                                mAccountObservableIntern.onError(new Throwable(e.toString()));
+                                mAccountSubjectIntern.onError(new Throwable(e.toString()));
                                 // reset current account
                                 mCurrentAccount = null;
                             }
@@ -301,23 +301,31 @@ public class RxSmartLockPasswordsFragment extends Fragment implements GoogleApiC
                         else {
                             // request has no resolution
                             mCredentialsApiClient.disconnect();
-                            mAccountObservableIntern.onCompleted();
+                            mAccountSubjectIntern.onCompleted();
                             // reset current account
                             mCurrentAccount = null;
                         }
                     }
                 });
 
-        return mAccountObservableIntern;
+        return mAccountSubjectIntern;
     }
 
     /**
-     * Save credential
+     * Save credential in smart lock for passwords an notify a subject
+     *
+     * @param statusObject the subject to notify
+     * @param credential the credential
+     * @param smartLockOptions the options (may be null)
      */
-    public void saveCredential(PublishSubject<RxStatus> statusObject, Credential credential) {
+    public void saveCredential(PublishSubject<RxStatus> statusObject,
+                               Credential credential,
+                               @Nullable SmartLockOptions smartLockOptions) {
+
         mCredentialAction = CredentialAction.SAVE;
         mStatusSubject = statusObject;
         mCredential = credential;
+        mSmartLockOptions = smartLockOptions;
         mCredentialsApiClient.connect();
     }
 
@@ -327,53 +335,8 @@ public class RxSmartLockPasswordsFragment extends Fragment implements GoogleApiC
                     @Override
                     public void onResult(@NonNull Status status) {
                         if (status.isSuccess()) {
-                            // clear smart lock options
-                            SmartLockHelper.getInstance(mActivity).resetSmartLockOptions();
-                            // credential saved
-                            mCredentialsApiClient.disconnect();
-                            mStatusSubject.onNext(new RxStatus(status));
-                            mStatusSubject.onCompleted();
-                        }
-                        else if(status.hasResolution()) {
-                            // Try to resolve the save request. This will prompt the user if
-                            // the credential is new.
-                            try {
-                                status.startResolutionForResult(mActivity, RC_SAVE);
-                            } catch (IntentSender.SendIntentException e) {
-                                // Could not resolve the request
-                                mCredentialsApiClient.disconnect();
-                                mStatusSubject.onError(new Throwable(e.toString()));
-                            }
-                        }
-                        else {
-                            // request has no resolution
-                            mCredentialsApiClient.disconnect();
-                            mStatusSubject.onCompleted();
-                        }
-                    }
-                });
-    }
-
-    public void saveCredentialWithOptions(PublishSubject<RxStatus> statusObject,
-                                          Credential credential,
-                                          SmartLockOptions smartLockOptions) {
-
-        mCredentialAction = CredentialAction.SAVE_WITH_OPTIONS;
-        mStatusSubject = statusObject;
-        mCredential = credential;
-        mSmartLockOptions = smartLockOptions;
-        mCredentialsApiClient.connect();
-    }
-
-    private void saveCredentialWithOptions() {
-        Auth.CredentialsApi.save(mCredentialsApiClient, mCredential).setResultCallback(
-                new ResultCallback<Status>() {
-                    @Override
-                    public void onResult(@NonNull Status status) {
-                        if (status.isSuccess()) {
                             // save options
-                            SmartLockHelper.getInstance(mActivity)
-                                    .saveSmartLockOptions(mSmartLockOptions);
+                            SmartLockHelper.getInstance(mActivity).saveSmartLockOptions(mSmartLockOptions);
                             // credential saved
                             mCredentialsApiClient.disconnect();
                             mStatusSubject.onNext(new RxStatus(status));
@@ -479,14 +442,14 @@ public class RxSmartLockPasswordsFragment extends Fragment implements GoogleApiC
 
             if (resultCode == RESULT_OK) {
                 // credentials saved
-                mAccountObservableIntern.onNext(mCurrentAccount);
-                mAccountObservableIntern.onCompleted();
+                mAccountSubjectIntern.onNext(mCurrentAccount);
+                mAccountSubjectIntern.onCompleted();
                 // reset current account
                 mCurrentAccount = null;
             } else {
                 // cancel by user
-                mAccountObservableIntern.onNext(mCurrentAccount);
-                mAccountObservableIntern.onCompleted();
+                mAccountSubjectIntern.onNext(mCurrentAccount);
+                mAccountSubjectIntern.onCompleted();
                 // reset current account
                 mCurrentAccount = null;
             }
@@ -511,9 +474,6 @@ public class RxSmartLockPasswordsFragment extends Fragment implements GoogleApiC
             case SAVE:
                 saveCredential();
                 break;
-            case SAVE_WITH_OPTIONS:
-                saveCredentialWithOptions();
-                break;
         }
     }
 
@@ -531,6 +491,6 @@ public class RxSmartLockPasswordsFragment extends Fragment implements GoogleApiC
     }
 
     enum CredentialAction {
-        REQUEST, REQUEST_AND_AUTO_SIGN_IN, SAVE, SAVE_WITH_OPTIONS, DELETE, DISABLE_AUTO_SIGN_IN
+        REQUEST, REQUEST_AND_AUTO_SIGN_IN, SAVE, DELETE, DISABLE_AUTO_SIGN_IN
     }
 }

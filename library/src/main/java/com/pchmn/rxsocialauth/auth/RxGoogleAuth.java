@@ -115,12 +115,18 @@ public class RxGoogleAuth {
      * @return a RxGoogleAuthFragment
      */
     private RxGoogleAuthFragment getRxGoogleAuthFragment(Builder builder) {
+        FragmentManager fragmentManager = mActivity.getSupportFragmentManager();
+
+        // prevent fragment manager already executing transaction
+        int stackCount = fragmentManager.getBackStackEntryCount();
+        if( fragmentManager.getFragments() != null )
+            fragmentManager = fragmentManager.getFragments().get( stackCount > 0 ? stackCount-1 : stackCount ).getChildFragmentManager();
+
         RxGoogleAuthFragment rxGoogleAuthFragment = (RxGoogleAuthFragment)
                 mActivity.getSupportFragmentManager().findFragmentByTag(RxGoogleAuthFragment.TAG);
 
         if (rxGoogleAuthFragment == null) {
             rxGoogleAuthFragment = RxGoogleAuthFragment.newInstance(builder);
-            FragmentManager fragmentManager = mActivity.getSupportFragmentManager();
             fragmentManager
                     .beginTransaction()
                     .add(rxGoogleAuthFragment, RxGoogleAuthFragment.TAG)

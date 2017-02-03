@@ -107,12 +107,18 @@ public class RxFacebookAuth {
      * @return a RxFacebookAuthFragment
      */
     private RxFacebookAuthFragment getRxFacebookAuthFragment(Builder builder) {
+        FragmentManager fragmentManager = mActivity.getSupportFragmentManager();
+
+        // prevent fragment manager already executing transaction
+        int stackCount = fragmentManager.getBackStackEntryCount();
+        if( fragmentManager.getFragments() != null )
+            fragmentManager = fragmentManager.getFragments().get( stackCount > 0 ? stackCount-1 : stackCount ).getChildFragmentManager();
+
         RxFacebookAuthFragment rxFacebookAuthFragment = (RxFacebookAuthFragment)
-                mActivity.getSupportFragmentManager().findFragmentByTag(RxFacebookAuthFragment.TAG);
+                fragmentManager.findFragmentByTag(RxFacebookAuthFragment.TAG);
 
         if (rxFacebookAuthFragment == null) {
             rxFacebookAuthFragment = RxFacebookAuthFragment.newInstance(builder);
-            FragmentManager fragmentManager = mActivity.getSupportFragmentManager();
             fragmentManager
                     .beginTransaction()
                     .add(rxFacebookAuthFragment, RxFacebookAuthFragment.TAG)
