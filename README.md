@@ -242,7 +242,6 @@ This method return a `RxAccount` object representing the current user in the app
 
 ```java
 // current user
-// 'this' represents a context
 RxAccount currentUser = RxSocialAuth.getInstance().getCurrentUser();
 ```
 
@@ -251,7 +250,7 @@ RxAccount currentUser = RxSocialAuth.getInstance().getCurrentUser();
 Create a `RxSmartLockPasswords` object using the `RxSmartLockPasswords.Builder` builder.
 ```java
 // build RxSmartLockPassword object
-// 'this' represents a Context
+// 'this' represents a FragmentActivity
 RxSmartLockPasswords rxSmartLockPasswords = new RxSmartLockPasswords.Builder(this)
         .disableAutoSignIn()
         .setAccountTypes(IdentityProviders.GOOGLE, IdentityProviders.FACEBOOK)
