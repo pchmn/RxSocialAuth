@@ -9,10 +9,10 @@ import android.widget.Toast;
 
 import com.google.android.gms.auth.api.credentials.Credential;
 import com.google.android.gms.auth.api.credentials.IdentityProviders;
-import com.pchmn.rxsocialauth.auth.RxAccount;
 import com.pchmn.rxsocialauth.auth.RxFacebookAuth;
 import com.pchmn.rxsocialauth.auth.RxGoogleAuth;
-import com.pchmn.rxsocialauth.smartlock.RxSmartLockPassword;
+import com.pchmn.rxsocialauth.common.RxAccount;
+import com.pchmn.rxsocialauth.smartlock.RxSmartLockPasswords;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -33,7 +33,7 @@ public class AuthActivity extends AppCompatActivity {
         ButterKnife.bind(this);
 
         // request smart lock credential on launch
-        new RxSmartLockPassword.Builder(this)
+        new RxSmartLockPasswords.Builder(this)
                 .disableAutoSignIn()
                 .setAccountTypes(IdentityProviders.GOOGLE, IdentityProviders.FACEBOOK)
                 .build()
@@ -59,10 +59,18 @@ public class AuthActivity extends AppCompatActivity {
                         startActivity(new Intent(AuthActivity.this, MainActivity.class));
                         finish();
                     }
+
                     else if(o instanceof Credential) {
-                        // credential contains login and password
                         Credential credential = (Credential) o;
-                        signInWithLoginPassword(credential.getId(), credential.getPassword());
+
+                        if(credential.getAccountType() == null) {
+                            // credential contains login and password
+                            signInWithLoginPassword(credential.getId(), credential.getPassword());
+                        }
+                        else {
+                            // credential from other provider than Google or Facebook
+                            handleCredential(credential);
+                        }
                     }
 
                 }, throwable -> {
@@ -149,6 +157,10 @@ public class AuthActivity extends AppCompatActivity {
         // go to main activity
         startActivity(new Intent(AuthActivity.this, MainActivity.class));
         finish();
+    }
+
+    private void handleCredential(Credential credential) {
+        // do your logic here
     }
 
 }

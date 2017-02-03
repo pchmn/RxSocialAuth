@@ -4,15 +4,18 @@ package com.pchmn.rxsocialauth.auth;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
-import android.util.Log;
+import android.support.v4.app.FragmentActivity;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
+import com.pchmn.rxsocialauth.App;
 import com.pchmn.rxsocialauth.R;
-import com.pchmn.rxsocialauth.smartlock.RxSmartLockPassword;
+import com.pchmn.rxsocialauth.common.RxAccount;
+import com.pchmn.rxsocialauth.common.RxStatus;
+import com.pchmn.rxsocialauth.smartlock.RxSmartLockPasswords;
 
 import java.io.IOException;
 
@@ -37,48 +40,40 @@ public class RxSocialAuth {
     private RxAuthStateListener mRxAuthStateListener;
 
     /**
-     * Construct a RxSocialAuth object from a given Context
-     *
-     * @param context the context
+     * Construct a RxSocialAuth object from the application context
      */
-    private RxSocialAuth(Context context) {
-        mContext = context.getApplicationContext();
-        mPrefs = context.getApplicationContext().getSharedPreferences(
-                context.getString(R.string.preference_current_user), Context.MODE_PRIVATE);
+    private RxSocialAuth() {
+        mContext = App.getContext();
+        mPrefs = mContext.getSharedPreferences(
+                mContext.getString(R.string.preference_current_user), Context.MODE_PRIVATE);
         mEditor = mPrefs.edit();
     }
 
     /**
-     * Get a unique instance of RxSocialAuth with a given Context
+     * Get a unique instance of RxSocialAuth
      *
-     * @param context the context
      * @return the instance of RxSocialAuth
      */
-    public static synchronized RxSocialAuth getInstance(Context context) {
+    public static synchronized RxSocialAuth getInstance() {
         if(mInstance == null)
-            mInstance = new RxSocialAuth(context);
+            mInstance = new RxSocialAuth();
         return mInstance;
     }
 
     /**
-     * Sign out from both Google and Facebook and disable auto sign in for Smart Lock Password
+     * Sign out from both Google and Facebook and disable auto sign in for Smart Lock Password.
+     * Require a FragmentActivity
      *
-     * @return an Observable
+     * @param activity the activity
+     * @return a PublishSubject<RxStatus>
      */
-    public PublishSubject<RxStatus> signOut() {
+    public PublishSubject<RxStatus> signOut(FragmentActivity activity) {
         mStatusObserver = PublishSubject.create();
-        attemptSignOut();
-        return mStatusObserver;
-    }
 
-    /**
-     * Sign out work
-     */
-    private void attemptSignOut() {
-        Observable<RxStatus> rxGoogleSignOut = new RxGoogleAuth.Builder(mContext).build().signOut();
-        Observable<RxStatus> rxFacebookSignOut = new RxFacebookAuth.Builder(mContext).build().signOut();
+        Observable<RxStatus> rxGoogleSignOut = new RxGoogleAuth.Builder(activity).build().signOut();
+        Observable<RxStatus> rxFacebookSignOut = new RxFacebookAuth.Builder(activity).build().signOut();
         Observable<RxStatus> rxSmartLockDisableAutoSignin =
-                new RxSmartLockPassword.Builder(mContext).build().disableAutoSignIn();
+                new RxSmartLockPasswords.Builder(activity).build().disableAutoSignIn();
 
         Observable.merge(rxGoogleSignOut, rxFacebookSignOut, rxSmartLockDisableAutoSignin)
                 .subscribe(new Action1<RxStatus>() {
@@ -88,6 +83,8 @@ public class RxSocialAuth {
                         mStatusObserver.onCompleted();
                     }
                 });
+
+        return mStatusObserver;
     }
 
     /**

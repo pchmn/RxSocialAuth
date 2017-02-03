@@ -1,4 +1,4 @@
-package com.pchmn.rxsocialauth.auth;
+package com.pchmn.rxsocialauth.common;
 
 
 import android.net.Uri;

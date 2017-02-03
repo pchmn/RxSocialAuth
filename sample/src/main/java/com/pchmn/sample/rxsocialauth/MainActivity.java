@@ -5,8 +5,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 
-import com.pchmn.rxsocialauth.auth.RxAccount;
 import com.pchmn.rxsocialauth.auth.RxSocialAuth;
+import com.pchmn.rxsocialauth.common.RxAccount;
 
 import butterknife.ButterKnife;
 import butterknife.OnClick;
@@ -21,7 +21,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
 
-        RxAccount currentUser = RxSocialAuth.getInstance(this).getCurrentUser();
+        RxAccount currentUser = RxSocialAuth.getInstance().getCurrentUser();
         if(currentUser == null) {
             // go to auth activity
             startActivity(new Intent(MainActivity.this, AuthActivity.class));
@@ -43,12 +43,12 @@ public class MainActivity extends AppCompatActivity {
 
     @OnClick(R.id.sign_out_button)
     public void signOut() {
-        RxSocialAuth.getInstance(this).signOut()
+        RxSocialAuth.getInstance().signOut(this)
                 .subscribe(rxStatus -> {
                     if(rxStatus.isSuccess()) {
                         // log info
                         Log.d(TAG, "current user is null: " +
-                                (RxSocialAuth.getInstance(this).getCurrentUser() == null));
+                                (RxSocialAuth.getInstance().getCurrentUser() == null));
 
                         // go to auth activity
                         startActivity(new Intent(MainActivity.this, AuthActivity.class));

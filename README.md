@@ -21,7 +21,7 @@ In your app level build.gradle :
 
 ```java
 dependencies {
-    compile 'com.github.pchmn:RxSocialAuth:1.0.1-beta'
+    compile 'com.github.pchmn:RxSocialAuth:2.0.0-beta'
 }
 ```
 
@@ -74,7 +74,7 @@ This class represents a social account and has these methods :
 * `String getDisplayName()`
 * `Uri getPhotoUri()`
 
-These methods can return a null object according to the permissions you asked or didn't ask when signed in.
+These methods can return a null object according to the permissions you asked or didn't ask when you signed in the user.
 
 #### RxStatus
 This class represents the status of a request and has these methods : 
@@ -88,7 +88,7 @@ This class represents the status of a request and has these methods :
 Create a `RxGoogleAuth` object using the `RxGoogleAuth.Builder` builder.
 ```java
 // build RxGoogleAuth object
-// 'this' represents a Context
+// 'this' represents a FragmentActivity
 RxGoogleAuth rxGoogleAuth = new RxGoogleAuth.Builder(this)
         .requestIdToken(getString(R.string.oauth_google_key))
         .requestEmail()
@@ -106,7 +106,7 @@ You can configure the builder with these methods :
 
 
 #### Sign in and silent sign in
-With `signIn()` and `silentSignIn(Credential credential)` methods, the observer receives a `RxAccount` object in case of success.
+`signIn()` and `silentSignIn(Credential credential)` methods return an `Observable<RxAccount>`.
 
 I think I found a bug in the Google Sign-In API with the [`silentSignIn()`](https://developers.google.com/android/reference/com/google/android/gms/auth/api/signin/GoogleSignInApi.html#silentSignIn(com.google.android.gms.common.api.GoogleApiClient)) method. If the user you try to silent sign in doesn't have a Google+ account, no matter if you set the [`requestProfile()`](https://developers.google.com/android/reference/com/google/android/gms/auth/api/signin/GoogleSignInOptions.Builder.html#requestProfile()) options, you won't have his profile.
 ```java
@@ -125,6 +125,7 @@ rxGoogleAuth.signIn()
 
 // silent sign in
 // you have to pass a credential object in order to silent sign in
+// if it fails the credential will be deleted from smart lock for passwords
 rxGoogleAuth.silentSignIn(Credential credential)
         .subscribe(rxAccount -> {
             // user is signed in
@@ -138,7 +139,7 @@ rxGoogleAuth.silentSignIn(Credential credential)
 ```
 
 #### Sign out and revoke access
-With `signOut()` and `revokeAccess()` methods, the observer receives a `RxStatus` object in case of success.
+`signOut()` and `revokeAccess()` methods return an `Observable<RxStatus>`.
 ```java
 // sign out
 rxGoogleAuth.signOut()
@@ -169,7 +170,7 @@ rxGoogleAuth.revokeAccess()
 Create a `RxFacebookAuth` object using the `RxFacebookAuth.Builder` builder.
 ```java
 // build RxFacebookAuth object
-// 'this' represents a Context
+// 'this' represents a FragmentActivity
 RxFacebookAuth rxFacebookAuth = new RxFacebookAuth.Builder(this)
         .enableSmartLock(true)
         .requestEmail()
@@ -184,7 +185,7 @@ You can configure the builder with these methods :
 * `enableSmartLock(boolean enable)` : Enable or disable Smart Lock For Passwords. If enabled, it will save automatically the credential in Smart Lock For Passwords
 
 #### Sign in 
-Like with Google Sign-In, the `signIn()` method will return an `Observable<RxAccount>`. And the observer will receive a `RxAccount` object in case of success.
+Like with Google Sign-In, the `signIn()` method will return an `Observable<RxAccount>`.
 ```java
 // sign in
 rxFacebookAuth.signIn()
@@ -200,7 +201,7 @@ rxFacebookAuth.signIn()
 ```
 
 #### Sign out 
-With `signOut()` method, the observer receives a `RxStatus` object in case of success.
+`signOut()` method returns an `Observable<RxStatus>`.
 ```java
 // sign out
 rxFacebookAuth.signOut()
@@ -224,8 +225,8 @@ This method will signed out the current user from the app, and from the current 
 
 ```java
 // sign out
-// 'this' represents a context
-RxSocialAuth.getInstance(this).signOut()
+// 'this' represents a FragmentActivity
+RxSocialAuth.getInstance().signOut(this)
         .subscribe(rxStatus -> {
             if(rxStatus.isSuccess()) {
                 // user is signed out
@@ -242,16 +243,16 @@ This method return a `RxAccount` object representing the current user in the app
 ```java
 // current user
 // 'this' represents a context
-RxAccount currentUser = RxSocialAuth.getInstance(this).getCurrentUser();
+RxAccount currentUser = RxSocialAuth.getInstance().getCurrentUser();
 ```
 
 
 ### Smart Lock For Passwords
-Create a `RxSmartLockPassword` object using the `RxSmartLockPassword.Builder` builder.
+Create a `RxSmartLockPasswords` object using the `RxSmartLockPasswords.Builder` builder.
 ```java
 // build RxSmartLockPassword object
 // 'this' represents a Context
-RxSmartLockPassword rxSmartLockPassword = new RxSmartLockPassword.Builder(this)
+RxSmartLockPasswords rxSmartLockPasswords = new RxSmartLockPasswords.Builder(this)
         .disableAutoSignIn()
         .setAccountTypes(IdentityProviders.GOOGLE, IdentityProviders.FACEBOOK)
         .build()
@@ -267,7 +268,7 @@ Automatically sign users into your app by using the Credentials API to request a
 If you want to retrieve a Facebook account credential, for example, you have to call `.setAccountTypes(IdentityProviders.FACEBOOK)` on the builder of your `RxSmartLockPassword` object before.
 
 ##### Request credential
-To retrieve user's stored credentials, use the `requestCredential()` method on a `RxSmartLockPassword` object. This method will emit a `Observable<CredentialRequestResult>`. 
+To retrieve user's stored credentials, use the `requestCredential()` method on a `RxSmartLockPassword` object. This method returns an `Observable<CredentialRequestResult>`.
 
 ```java
 // request credential
@@ -286,19 +287,21 @@ rxSmartLockPassword.requestCredential()
 ```
 
 ##### Request credential and auto sign in
-To retrieve user's stored credentials and automatically sign in the user with found credentials, use the `requestCredentialAndAutoSignIn()` method. It will emit a `Observable<Object>`.
+To retrieve user's stored credentials and automatically sign in the user with found credentials, use the `requestCredentialAndAutoSignIn()` method. It will return an `Observable<Object>`.
 
 With this method you don't have to handle different cases. No matter if there is no stored credential, if there is only one stored credential, or if there are multiple stored credentials, the `requestCredentialAndAutoSignIn()` method will do all the work.
 
 * If there is only one stored credential, or if the user picks one of the multiple stored credentials, this method will catch it :
     * If the account type is `Google` or `Facebook`, the user will be automatically sign in according to the provider, and the observer will receive a `RxAccount` object in case of success. If it fails a `Throwable` will be emitted.
-    * If the account type is null, this is a `LoginPassword` credential. In this case, the observer will receive a `Credential` object, containing the id and the password, and you'll have to authenticate the user manually with the credential. 
+    * If the account type is different from `Google` or `Facebook` the observer will receive a `Credential` object :
+        * If the account type is null, this is a `LoginPassword` credential. In this case the `Credential` object will contain the id and the password, and you'll have to authenticate the user manually with the credential.
+        * If the account type is not null, it means that there is a provider, but different from `Google` or `Facebook`, like `Twitter` for example
 
 * If the user cancels or if there is no stored credential, a `Throwable` will be emitted.
 
 ```java
 // request credential and auto sign in
-rxSmartLockPassword.requestCredentialAndAutoSignIn()
+rxSmartLockPasswords.requestCredentialAndAutoSignIn()
         .subscribe(o -> {
             if(o instanceof RxAccount) {
                 // user is signed in using google or facebook
@@ -306,11 +309,17 @@ rxSmartLockPassword.requestCredentialAndAutoSignIn()
                 Log.d(TAG, "provider: " + rxAccount.getProvider());
                 Log.d(TAG, "email: " + rxAccount.getEmail());
              }
+
              else if(o instanceof Credential) {
-                // credential contains login and password
                 Credential credential = (Credential) o;
-                // sign in manually
-                signInWithLoginPassword(credential.getId(), credential.getPassword());
+                if(credential.getAccountType() == null) {
+                    // credential contains login and password
+                    signInWithLoginPassword(credential.getId(), credential.getPassword());
+                }
+                else {
+                    // credential from other provider than Google or Facebook
+                    handleCredential(credential);
+                }
              }
 
         }, throwable -> {
@@ -321,12 +330,16 @@ rxSmartLockPassword.requestCredentialAndAutoSignIn()
 private void signInWithLoginPassword(String login, String password) {
     // authenticate the user like you want
 }
+
+private void handleCredential(Credential credential) {
+   // do your logic here
+}
 ```
 
 #### Store a user's credentials
 After users successfully sign in, create accounts, or change passwords, allow them to store their credentials to automate future authentication in your app.
 
-To store a user's credentials, use the `saveCredential(Credential credential)` method on a `RxSmartLockPassword` object. In case of success the observer will receive a `RxStatus` object.
+To store a user's credentials, use the `saveCredential(Credential credential)` method on a `RxSmartLockPassword` object. It returns an `Observable<RxStatus>`.
 
 If you used `RxGoogleAuth` or `RxFacebookAuth` with the `enableSmartLock(true)` option, the credential is stored automatically, and you don't have to use this method.
 
@@ -345,7 +358,7 @@ rxSmartLockPassword.saveCredential(Credential credential)
 
 #### Delete stored credentials
 
-To delete a stored credential, use the `deleteCredential(Credential credential)` method on a `RxSmartLockPassword` object. In case of success the observer will receive a `RxStatus` object.
+To delete a stored credential, use the `deleteCredential(Credential credential)` method on a `RxSmartLockPassword` object. It returns an `Observable<RxStatus>`.
 
 ```java
 // delete credential
